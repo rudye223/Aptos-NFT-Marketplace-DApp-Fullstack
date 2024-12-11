@@ -275,9 +275,7 @@ address 0x7af8a296ba5095b66fb7283a6e463e1bcb7fbc6e7101071c870a6cd165cb3dd1 {
 
         (nft.id, nft.owner, nft.name, nft.description, nft.uri, nft.price, nft.for_sale, nft.rarity)
     }
-        public fun min(a: u64, b: u64): u64 {
-        if (a < b) { a } else { b }
-    }
+     
     // List NFT for Sale
 public entry fun list_for_sale(account: &signer, marketplace_addr: address, nft_id: u64, price: u64) acquires Marketplace {
     let marketplace = borrow_global_mut<Marketplace>(marketplace_addr);
@@ -290,6 +288,10 @@ public entry fun list_for_sale(account: &signer, marketplace_addr: address, nft_
     nft_ref.for_sale = true;
     nft_ref.price = price;
 }
+
+   public fun min(a: u64, b: u64): u64 {
+        if (a < b) { a } else { b }
+    }
 
 }
 
