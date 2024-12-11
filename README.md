@@ -1,3 +1,11 @@
+clone repo
+for codespaces makesure .devcontainer folder exists at the root directory and file devcontainer.json exists in the folde with content of :```{
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "features": {
+    }
+  }```
+
+
 Open a new terminal. Run the following command to install the Aptos CLI:
 cd backend
 curl -fsSL "https://aptos.dev/scripts/install_cli.py" | python3
@@ -10,6 +18,7 @@ Open your Petra Wallet, copy your account address, and insert it in place of you
 NFTMarketplace = "your-marketplace-address-here"
 
 cd contracts
+
 aptos init
  Select the Network (Devnet): Devnet allows you to test your contract’s functionality in a simulated environment similar to the main network. To select Devnet, enter the following when prompted:
 
