@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Typography, Card, Row, Col, Pagination, message, Button, Input, Modal } from "antd";
 import { AptosClient } from "aptos";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-
+import { MARKET_PLACE_ADDRESS } from "../Constants";
 const { Title } = Typography;
 const { Meta } = Card;
 
@@ -24,8 +24,7 @@ const MyNFTs: React.FC = () => {
   const [nfts, setNfts] = useState<NFT[]>([]);
   const [totalNFTs, setTotalNFTs] = useState(0);
   const { account, signAndSubmitTransaction } = useWallet();
-  const marketplaceAddr = "0x7af8a296ba5095b66fb7283a6e463e1bcb7fbc6e7101071c870a6cd165cb3dd1";
-
+   
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedNft, setSelectedNft] = useState<NFT | null>(null);
   const [salePrice, setSalePrice] = useState<string>("");
@@ -37,8 +36,8 @@ const MyNFTs: React.FC = () => {
       console.log("Fetching NFT IDs for owner:", account.address);
 
       const nftIdsResponse = await client.view({
-        function: `${marketplaceAddr}::NFTMarketplace::get_all_nfts_for_owner`,
-        arguments: [marketplaceAddr, account.address, "100", "0"],
+        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::get_all_nfts_for_owner`,
+        arguments: [MARKET_PLACE_ADDRESS, account.address, "100", "0"],
         type_arguments: [],
       });
 
@@ -57,8 +56,8 @@ const MyNFTs: React.FC = () => {
         nftIds.map(async (id) => {
           try {
             const nftDetails = await client.view({
-              function: `${marketplaceAddr}::NFTMarketplace::get_nft_details`,
-              arguments: [marketplaceAddr, id],
+              function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::get_nft_details`,
+              arguments: [MARKET_PLACE_ADDRESS, id],
               type_arguments: [],
             });
 
@@ -103,7 +102,7 @@ const MyNFTs: React.FC = () => {
       console.error("Error fetching NFTs:", error);
       message.error("Failed to fetch your NFTs.");
     }
-  }, [account, marketplaceAddr]);
+  }, [account, MARKET_PLACE_ADDRESS]);
 
   const handleSellClick = (nft: NFT) => {
     setSelectedNft(nft);
@@ -124,9 +123,9 @@ const MyNFTs: React.FC = () => {
   
       const entryFunctionPayload = {
         type: "entry_function_payload",
-        function: `${marketplaceAddr}::NFTMarketplace::list_for_sale`,
+        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::list_for_sale`,
         type_arguments: [],
-        arguments: [marketplaceAddr, selectedNft.id.toString(), priceInOctas.toString()],
+        arguments: [MARKET_PLACE_ADDRESS, selectedNft.id.toString(), priceInOctas.toString()],
       };
   
       // Bypass type checking

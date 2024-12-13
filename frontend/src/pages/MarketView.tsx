@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Typography, Radio, message, Card, Row, Col, Pagination, Tag, Button, Modal } from "antd";
 import { AptosClient } from "aptos";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { MARKET_PLACE_ADDRESS } from "../Constants";
 
 const { Title } = Typography;
 const { Meta } = Card;
@@ -59,7 +60,7 @@ const MarketView: React.FC<MarketViewProps> = ({ marketplaceAddr }) => {
     try {
         const response = await client.getAccountResource(
             marketplaceAddr,
-            "0x7af8a296ba5095b66fb7283a6e463e1bcb7fbc6e7101071c870a6cd165cb3dd1::NFTMarketplace::Marketplace"
+            `${MARKET_PLACE_ADDRESS}::NFTMarketplace::Marketplace`
         );
         const nftList = (response.data as { nfts: NFT[] }).nfts;
 

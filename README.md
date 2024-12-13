@@ -30,7 +30,9 @@ aptos move publish
 
 Approve the Transaction: Type yes when prompted to pay for gas.
 
-Go to Aptos Explorer and ensure the network is set to Devnet. In the search bar, enter your NFT marketplace address (the address where you deployed the contract) to locate your smart contract.
+Go to Aptos Explorer 
+https://explorer.aptoslabs.com/?network=devnet
+and ensure the network is set to Devnet. In the search bar, enter your NFT marketplace address (the address where you deployed the contract) to locate your smart contract.
 
 Once your address loads, look for the Module tab on the dashboard. This tab lists all smart contracts (modules) published under the specified address.
 

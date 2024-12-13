@@ -9,10 +9,9 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MyNFTs from "./pages/MyNFTs";
 import { AptosClient } from "aptos";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-
+import { MARKET_PLACE_ADDRESS } from "./Constants";
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
-const marketplaceAddr = "0x7af8a296ba5095b66fb7283a6e463e1bcb7fbc6e7101071c870a6cd165cb3dd1";
-
+ 
 function App() {
   const { signAndSubmitTransaction } = useWallet();
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -28,7 +27,7 @@ function App() {
 
       const entryFunctionPayload = {
         type: "entry_function_payload",
-        function: `${marketplaceAddr}::NFTMarketplace::mint_nft`,
+        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::mint_nft`,
         type_arguments: [],
         arguments: [nameVector, descriptionVector, uriVector, values.rarity],
       };
@@ -50,7 +49,7 @@ function App() {
         <NavBar onMintNFTClick={handleMintNFTClick} /> {/* Pass handleMintNFTClick to NavBar */}
 
         <Routes>
-          <Route path="/" element={<MarketView marketplaceAddr={marketplaceAddr} />} />
+          <Route path="/" element={<MarketView marketplaceAddr={MARKET_PLACE_ADDRESS} />} />
           <Route path="/my-nfts" element={<MyNFTs />} />
         </Routes>
 
