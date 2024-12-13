@@ -10,6 +10,7 @@ import MyNFTs from "./pages/MyNFTs";
 import { AptosClient } from "aptos";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { MARKET_PLACE_ADDRESS } from "./Constants";
+import AuctionPage from "./pages/AuctionPage";
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
  
 function App() {
@@ -33,6 +34,7 @@ function App() {
       };
 
       const txnResponse = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
+      console.log("Transaction Response:", txnResponse);
       await client.waitForTransaction(txnResponse.hash);
 
       message.success("NFT minted successfully!");
@@ -51,6 +53,7 @@ function App() {
         <Routes>
           <Route path="/" element={<MarketView marketplaceAddr={MARKET_PLACE_ADDRESS} />} />
           <Route path="/my-nfts" element={<MyNFTs />} />
+          <Route path="/auction" element={<AuctionPage />} />
         </Routes>
 
         <Modal

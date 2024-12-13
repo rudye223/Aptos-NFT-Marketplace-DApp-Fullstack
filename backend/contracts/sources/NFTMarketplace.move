@@ -147,6 +147,28 @@ address 0x7af8a296ba5095b66fb7283a6e463e1bcb7fbc6e7101071c870a6cd165cb3dd1 {
         coin::transfer<aptos_coin::AptosCoin>(account, signer::address_of(account), fee);
     }
 
+public fun get_active_auctions(marketplace_addr: address, limit: u64, offset: u64): vector<Auction> acquires Marketplace {
+    // Borrow the global Marketplace mutably
+    let marketplace = borrow_global_mut<Marketplace>(marketplace_addr);  // Use borrow_global_mut for mutable reference
+
+    let active_auctions = vector::empty<Auction>();
+
+    let nfts_len = vector::length(&marketplace.nfts);
+    let end = min(offset + limit, nfts_len);
+    let mut_i = offset;
+
+    while (mut_i < end) {
+        let nft_ref = vector::borrow_mut(&mut marketplace.nfts, mut_i);  // Borrow mutable reference to nft
+        if (option::is_some(&nft_ref.auction)) {
+            let auction = option::borrow(&mut nft_ref.auction);  // Borrow the auction
+            vector::push_back(&mut active_auctions, *auction);  // Dereference to push the value
+        };
+        mut_i = mut_i + 1;
+    };
+
+    active_auctions
+}
+
     // Transfer NFT Ownership
     public entry fun transfer_ownership(account: &signer, marketplace_addr: address, nft_id: u64, new_owner: address) acquires Marketplace {
         let marketplace = borrow_global_mut<Marketplace>(marketplace_addr);
