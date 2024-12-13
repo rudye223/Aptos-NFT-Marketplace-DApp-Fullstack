@@ -62,8 +62,9 @@ const MarketView: React.FC<MarketViewProps> = ({ marketplaceAddr }) => {
             marketplaceAddr,
             `${MARKET_PLACE_ADDRESS}::NFTMarketplace::Marketplace`
         );
+        console.log("Result::",response )
         const nftList = (response.data as { nfts: NFT[] }).nfts;
-
+       
         const hexToUint8Array = (hexString: string): Uint8Array => {
             const bytes = new Uint8Array(hexString.length / 2);
             for (let i = 0; i < hexString.length; i += 2) {
