@@ -36,10 +36,11 @@ const AuctionsPage = () => {
   const fetchNFTDetails = async (id: number) => {
     try {
       const nftDetails = await client.view({
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::get_nft_details`,
+        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::get_nft_details_current`,
         arguments: [MARKET_PLACE_ADDRESS, id],
         type_arguments: [],
       });
+      console.log("raw::", nftDetails )
       const [nftId, owner, name, description, uri, price, forSale, rarity] = nftDetails as [
         number,
         string,

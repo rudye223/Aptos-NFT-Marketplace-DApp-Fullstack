@@ -290,15 +290,47 @@ public fun get_active_auctions(marketplace_addr: address, limit: u64, offset: u6
         exists<Marketplace>(marketplace_addr)
     }
 
+
+     //Remove this function
     // Get NFT Details
     #[view]
-    public fun get_nft_details(marketplace_addr: address, nft_id: u64): (u64, address, vector<u8>, vector<u8>, vector<u8>, u64, bool, u8) acquires Marketplace {
+     public fun get_nft_details(marketplace_addr: address, nft_id: u64): (u64, address, vector<u8>, vector<u8>, vector<u8>, u64, bool, u8) acquires Marketplace {
         let marketplace = borrow_global<Marketplace>(marketplace_addr);
         let nft = vector::borrow(&marketplace.nfts, nft_id);
 
         (nft.id, nft.owner, nft.name, nft.description, nft.uri, nft.price, nft.for_sale, nft.rarity)
     }
-     
+
+  // Get NFT Details
+    #[view]
+ public fun get_nft_details_current(
+    marketplace_addr: address, 
+    nft_id: u64
+): (u64, address, vector<u8>, vector<u8>, vector<u8>, u64, bool, u8, option::Option<Auction>) acquires Marketplace {
+    let marketplace = borrow_global<Marketplace>(marketplace_addr);
+    let nft = vector::borrow(&marketplace.nfts, nft_id);
+
+    // Return the NFT details along with the auction (if available)
+    (nft.id, nft.owner, nft.name, nft.description, nft.uri, nft.price, nft.for_sale, nft.rarity, nft.auction)
+}
+
+
+ //Remove this function   
+#[view]    
+public fun get_nft_details_all(
+    marketplace_addr: address, 
+    nft_id: u64
+): NFT acquires Marketplace {
+    let marketplace = borrow_global<Marketplace>(marketplace_addr);
+    let nft = vector::borrow(&marketplace.nfts, nft_id);
+
+    // Simply return the NFT object directly
+    return *nft
+}
+
+
+
+
     // List NFT for Sale
 public entry fun list_for_sale(account: &signer, marketplace_addr: address, nft_id: u64, price: u64) acquires Marketplace {
     let marketplace = borrow_global_mut<Marketplace>(marketplace_addr);
