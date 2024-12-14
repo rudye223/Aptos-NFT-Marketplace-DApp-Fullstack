@@ -16,6 +16,11 @@ type NFT = {
   rarity: number;
   price: number;
   for_sale: boolean;
+  auction: { 
+    starting_bid: number; 
+    duration: number; 
+    end_time: number;
+  } | null;
 };
 
 const MyNFTs: React.FC = () => {
@@ -43,7 +48,7 @@ const MyNFTs: React.FC = () => {
         arguments: [MARKET_PLACE_ADDRESS, account.address, "100", "0"],
         type_arguments: [],
       });
-
+  
       const nftIds = Array.isArray(nftIdsResponse[0]) ? nftIdsResponse[0] : nftIdsResponse;
       setTotalNFTs(nftIds.length);
 
@@ -59,12 +64,17 @@ const MyNFTs: React.FC = () => {
         nftIds.map(async (id) => {
           try {
             const nftDetails = await client.view({
-              function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::get_nft_details`,
+              function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::get_nft_details_current`,
               arguments: [MARKET_PLACE_ADDRESS, id],
               type_arguments: [],
             });
-
-            const [nftId, owner, name, description, uri, price, forSale, rarity] = nftDetails as [
+            console.log("raw::", nftDetails)
+            const auc= nftDetails[8]
+            const auc_2=  auc['vec']
+             const auction = auc_2[0] 
+             console.log("auction", auction )
+            
+            const [nftId, owner, name, description, uri, price, forSale, rarity ] = nftDetails as [
               number,
               string,
               string,
@@ -72,7 +82,8 @@ const MyNFTs: React.FC = () => {
               string,
               number,
               boolean,
-              number
+              number,
+              
             ];
 
             const hexToUint8Array = (hexString: string): Uint8Array => {
@@ -91,6 +102,7 @@ const MyNFTs: React.FC = () => {
               rarity,
               price: price / 100000000, // Convert octas to APT
               for_sale: forSale,
+              auction:auction,
             };
           } catch (error) {
             console.error(`Error fetching details for NFT ID ${id}:`, error);
@@ -239,18 +251,30 @@ const MyNFTs: React.FC = () => {
               }}
               cover={<img alt={nft.name} src={nft.uri} />}
               actions={[
-                <Button type="link" onClick={() => handleSellClick(nft)}>
-                  Sell
-                </Button>,
-                <Button type="link" onClick={() => handleAuctionClick(nft)}>
-                  Auction
-                </Button>
+                nft.auction ? (<Button type="link" disabled>
+                Sell
+              </Button>
+                ) : ( <Button type="link" onClick={() => handleSellClick(nft)}>
+                Sell
+              </Button>
+                )
+               ,
+                nft.auction ? (
+                  <Button type="link" disabled>
+                    Ongoing Auction
+                  </Button>
+                ) : (
+                  <Button type="link" onClick={() => handleAuctionClick(nft)}>
+                    Auction
+                  </Button>
+                )
               ]}
             >
               <Meta title={nft.name} description={`Rarity: ${nft.rarity}, Price: ${nft.price} APT`} />
               <p>ID: {nft.id}</p>
               <p>{nft.description}</p>
-              <p style={{ margin: "10px 0" }}>For Sale: {nft.for_sale ? "Yes" : "No"}</p>
+              <p style={{ margin: "10px 0" }}>For Sale: {!nft.for_sale? "Yes" : "No"}</p>
+              {nft.auction && <p>Auction Ending: {new Date(nft.auction.end_time * 1000).toLocaleString()}</p>}
             </Card>
           </Col>
         ))}
@@ -339,7 +363,7 @@ const MyNFTs: React.FC = () => {
         )}
       </Modal>
     </div>
-  );  
+  );
 };
 
 export default MyNFTs;

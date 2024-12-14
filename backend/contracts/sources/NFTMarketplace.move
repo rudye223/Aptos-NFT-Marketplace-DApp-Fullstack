@@ -98,6 +98,7 @@ address 0x7af8a296ba5095b66fb7283a6e463e1bcb7fbc6e7101071c870a6cd165cb3dd1 {
         };
 
         nft_ref.auction = option::some(auction);
+        nft_ref.for_sale = true;
     }
 
     // Place Bid
@@ -138,6 +139,7 @@ address 0x7af8a296ba5095b66fb7283a6e463e1bcb7fbc6e7101071c870a6cd165cb3dd1 {
         assert!(auction.end_time <= current_time, E_AUCTION_NOT_ENDED);
 
         nft_ref.owner = auction.highest_bidder;
+        nft_ref.for_sale = false;
         *auction_opt = option::none<Auction>();
 
         let fee = (auction.highest_bid * MARKETPLACE_FEE_PERCENT) / 100;
@@ -291,7 +293,7 @@ public fun get_active_auctions(marketplace_addr: address, limit: u64, offset: u6
     }
 
 
-     //Remove this function
+     // will Remove this function when im done with project 
     // Get NFT Details
     #[view]
      public fun get_nft_details(marketplace_addr: address, nft_id: u64): (u64, address, vector<u8>, vector<u8>, vector<u8>, u64, bool, u8) acquires Marketplace {
@@ -315,7 +317,7 @@ public fun get_active_auctions(marketplace_addr: address, limit: u64, offset: u6
 }
 
 
- //Remove this function   
+ //will Remove this function when im done with project   
 #[view]    
 public fun get_nft_details_all(
     marketplace_addr: address, 
