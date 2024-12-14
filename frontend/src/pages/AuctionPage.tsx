@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Card, Row, Col, Button, Pagination, message, Modal, Input, Form } from "antd";
+import { Typography, Card, Row, Col, Button, Pagination, message, Modal, Input, Form } from "antd";
 import { AptosClient } from "aptos";
 import { MARKET_PLACE_ADDRESS } from "../Constants";
 import Meta from "antd/es/card/Meta";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
+const { Title } = Typography;
 
 type Auction = {
   id: number;
@@ -189,6 +190,7 @@ const AuctionsPage = () => {
 
   return (
     <div>
+       <Title level={2} style={{ marginBottom: "20px", textAlign:"center" }}>Ongoing Auctions</Title>
       <Row gutter={[24, 24]}>
         {auctions.map((auction) => (
           <Col key={auction.id} xs={24} sm={12} md={8} lg={8} xl={6}>
