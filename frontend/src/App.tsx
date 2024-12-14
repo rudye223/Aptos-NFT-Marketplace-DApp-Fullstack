@@ -53,7 +53,7 @@ function App() {
         <Routes>
           <Route path="/" element={<MarketView marketplaceAddr={MARKET_PLACE_ADDRESS} />} />
           <Route path="/my-nfts" element={<MyNFTs />} />
-          <Route path="/auction" element={<AuctionPage />} />
+          <Route path="/auctions" element={<AuctionPage />} />
         </Routes>
 
         <Modal

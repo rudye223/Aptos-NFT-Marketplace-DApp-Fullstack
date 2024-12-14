@@ -3,6 +3,7 @@ import { Typography, Radio, message, Card, Row, Col, Pagination, Tag, Button, Mo
 import { AptosClient } from "aptos";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { MARKET_PLACE_ADDRESS } from "../Constants";
+import { useNavigate } from "react-router-dom";
 
 const { Title } = Typography;
 const { Meta } = Card;
@@ -18,6 +19,7 @@ type NFT = {
   price: number;
   for_sale: boolean;
   rarity: number;
+  auction: any;  // Include auction data structure
 };
 
 interface MarketViewProps {
@@ -48,7 +50,7 @@ const MarketView: React.FC<MarketViewProps> = ({ marketplaceAddr }) => {
   const [rarity, setRarity] = useState<'all' | number>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 8;
-
+const navigate= useNavigate()
   const [isBuyModalVisible, setIsBuyModalVisible] = useState(false);
   const [selectedNft, setSelectedNft] = useState<NFT | null>(null);
 
@@ -62,9 +64,10 @@ const MarketView: React.FC<MarketViewProps> = ({ marketplaceAddr }) => {
             marketplaceAddr,
             `${MARKET_PLACE_ADDRESS}::NFTMarketplace::Marketplace`
         );
-        console.log("Result::",response )
+        console.log("Result::", response);
         const nftList = (response.data as { nfts: NFT[] }).nfts;
-       
+        console.log("nftlist::", nftList);
+        
         const hexToUint8Array = (hexString: string): Uint8Array => {
             const bytes = new Uint8Array(hexString.length / 2);
             for (let i = 0; i < hexString.length; i += 2) {
@@ -73,24 +76,44 @@ const MarketView: React.FC<MarketViewProps> = ({ marketplaceAddr }) => {
             return bytes;
         };
 
-        const decodedNfts = nftList.map((nft) => ({
+        const decodedNfts = nftList.map((nft) => {
+          console.log("h:", nft);
+          // Extract auction details
+          const auc = nft.auction;  // Assuming nftDetails contains auction data
+          const auc_2 = auc ? auc['vec'] : [];  // Extract the 'vec' array which holds auction details
+          const auction = auc_2.length ? auc_2[0] : null;  // Get the first auction if available
+          
+          console.log("got it", auction);
+          
+          // Decode NFT details and include auction information
+          return {
             ...nft,
             name: new TextDecoder().decode(hexToUint8Array(nft.name.slice(2))),
             description: new TextDecoder().decode(hexToUint8Array(nft.description.slice(2))),
             uri: new TextDecoder().decode(hexToUint8Array(nft.uri.slice(2))),
             price: nft.price / 100000000,
-        }));
+            auction: auction ? {
+              end_time: auction.end_time,
+              highest_bid: auction.highest_bid,
+              highest_bidder: auction.highest_bidder,
+              starting_price: auction.starting_price,
+            } : null,  // Include auction info if available, otherwise null
+          };
+        });
+        
+        console.log("Decoded NFTs:", decodedNfts);
 
-        // Filter NFTs based on `for_sale` property and rarity if selected
-        const filteredNfts = decodedNfts.filter((nft) => nft.for_sale && (selectedRarity === undefined || nft.rarity === selectedRarity));
-
+        const filteredNfts = decodedNfts.filter((nft) => 
+          (nft.for_sale || nft.auction) && (selectedRarity === undefined || nft.rarity === selectedRarity)
+        );
+        
         setNfts(filteredNfts);
         setCurrentPage(1);
     } catch (error) {
         console.error("Error fetching NFTs by rarity:", error);
         message.error("Failed to fetch NFTs.");
     }
-};
+  };
 
   const handleBuyClick = (nft: NFT) => {
     setSelectedNft(nft);
@@ -104,20 +127,20 @@ const MarketView: React.FC<MarketViewProps> = ({ marketplaceAddr }) => {
 
   const handleConfirmPurchase = async () => {
     if (!selectedNft) return;
-  
+
     try {
       const priceInOctas = selectedNft.price * 100000000;
-  
+
       const entryFunctionPayload = {
         type: "entry_function_payload",
         function: `${marketplaceAddr}::NFTMarketplace::purchase_nft`,
         type_arguments: [],
         arguments: [marketplaceAddr, selectedNft.id.toString(), priceInOctas.toString()],
       };
-  
+
       const response = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
       await client.waitForTransaction(response.hash);
-  
+
       message.success("NFT purchased successfully!");
       setIsBuyModalVisible(false);
       handleFetchNfts(rarity === 'all' ? undefined : rarity); // Refresh NFT list
@@ -131,16 +154,9 @@ const MarketView: React.FC<MarketViewProps> = ({ marketplaceAddr }) => {
   const paginatedNfts = nfts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
-    <div
-      style={{  
-        textAlign: "center",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-      }}
-    >
+    <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
       <Title level={2} style={{ marginBottom: "20px" }}>Marketplace</Title>
-  
+
       {/* Filter Buttons */}
       <div style={{ marginBottom: "20px" }}>
         <Radio.Group
@@ -159,7 +175,7 @@ const MarketView: React.FC<MarketViewProps> = ({ marketplaceAddr }) => {
           <Radio.Button value={4}>Super Rare</Radio.Button>
         </Radio.Group>
       </div>
-  
+
       {/* Card Grid */}
       <Row
         gutter={[24, 24]}
@@ -190,9 +206,15 @@ const MarketView: React.FC<MarketViewProps> = ({ marketplaceAddr }) => {
               }}
               cover={<img alt={nft.name} src={nft.uri} />}
               actions={[
-                <Button type="link" onClick={() => handleBuyClick(nft)}>
-                  Buy
-                </Button>
+                nft.auction ? (
+                  <Button type="link"  onClick={() => navigate('/auctions')}>
+                    Ongoing Auction
+                  </Button>
+                ) : (
+                  <Button type="link" onClick={() => handleBuyClick(nft)}>
+                    Buy
+                  </Button>
+                ),
               ]}
             >
               {/* Rarity Tag */}
@@ -202,7 +224,7 @@ const MarketView: React.FC<MarketViewProps> = ({ marketplaceAddr }) => {
               >
                 {rarityLabels[nft.rarity]}
               </Tag>
-  
+
               <Meta title={nft.name} description={`Price: ${nft.price} APT`} />
               <p>{nft.description}</p>
               <p>ID: {nft.id}</p>
@@ -211,7 +233,7 @@ const MarketView: React.FC<MarketViewProps> = ({ marketplaceAddr }) => {
           </Col>
         ))}
       </Row>
-  
+
       {/* Pagination */}
       <div style={{ marginTop: 30, marginBottom: 30 }}>
         <Pagination
@@ -222,31 +244,18 @@ const MarketView: React.FC<MarketViewProps> = ({ marketplaceAddr }) => {
           style={{ display: "flex", justifyContent: "center" }}
         />
       </div>
-  
+
       {/* Buy Modal */}
       <Modal
-        title="Purchase NFT"
+        title="Confirm Purchase"
         visible={isBuyModalVisible}
+        onOk={handleConfirmPurchase}
         onCancel={handleCancelBuy}
-        footer={[
-          <Button key="cancel" onClick={handleCancelBuy}>
-            Cancel
-          </Button>,
-          <Button key="confirm" type="primary" onClick={handleConfirmPurchase}>
-            Confirm Purchase
-          </Button>,
-        ]}
+        okText="Confirm"
+        cancelText="Cancel"
       >
-        {selectedNft && (
-          <>
-            <p><strong>NFT ID:</strong> {selectedNft.id}</p>
-            <p><strong>Name:</strong> {selectedNft.name}</p>
-            <p><strong>Description:</strong> {selectedNft.description}</p>
-            <p><strong>Rarity:</strong> {rarityLabels[selectedNft.rarity]}</p>
-            <p><strong>Price:</strong> {selectedNft.price} APT</p>
-            <p><strong>Owner:</strong> {truncateAddress(selectedNft.owner)}</p>
-          </>
-        )}
+        <p>Are you sure you want to buy this NFT?</p>
+        <p>Price: {selectedNft?.price} APT</p>
       </Modal>
     </div>
   );
