@@ -251,16 +251,16 @@ const MyNFTs: React.FC = () => {
               }}
               cover={<img alt={nft.name} src={nft.uri} />}
               actions={[
-                nft.auction ? (<Button type="link" disabled>
-                Sell
-              </Button>
-                ) : ( <Button type="link" onClick={() => handleSellClick(nft)}>
+                nft.auction ? (
+             <></>
+                ) : ( 
+                <Button type="link" onClick={() => handleSellClick(nft)}>
                 Sell
               </Button>
                 )
                ,
                 nft.auction ? (
-                  <Button type="link" disabled>
+                  <Button type="link" >
                     Ongoing Auction
                   </Button>
                 ) : (
