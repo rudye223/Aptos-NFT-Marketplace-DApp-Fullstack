@@ -5,7 +5,6 @@ import { MARKET_PLACE_ADDRESS } from "../Constants";
 import Meta from "antd/es/card/Meta";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
-// Update the Auction type to include the expected nftMetadata structure
 type Auction = {
   id: number;
   nftId: number;
@@ -19,6 +18,7 @@ type Auction = {
     rarity: number;
     price: number;
     forSale: boolean;
+    owner: string; // Added owner field
   };
 };
 
@@ -27,11 +27,10 @@ const AuctionsPage = () => {
   const [auctions, setAuctions] = useState<Auction[]>([]);
   const [totalAuctions, setTotalAuctions] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isModalVisible, setIsModalVisible] = useState(false); // Modal visibility state
-  const [selectedAuction, setSelectedAuction] = useState<Auction | null>(null); // Selected auction for placing a bid
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedAuction, setSelectedAuction] = useState<Auction | null>(null);
 
   const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
-
   const pageSize = 8;
 
   const fetchNFTDetails = async (id: number) => {
@@ -66,19 +65,20 @@ const AuctionsPage = () => {
         description: new TextDecoder().decode(hexToUint8Array(description.slice(2))),
         imageUrl: new TextDecoder().decode(hexToUint8Array(uri.slice(2))),
         rarity,
-        price: price / 100000000, // Convert octas to APT
+        price: price / 100000000,
         forSale,
+        owner,
       };
     } catch (error) {
       console.error("Error fetching NFT details:", error);
-      return null; // Return null if metadata fetch fails
+      return null;
     }
   };
 
   const fetchAuctions = useCallback(async () => {
     try {
-      const offset = ((currentPage - 1) * pageSize).toString(); // Convert offset to string
-      const limit = pageSize.toString(); // Convert limit to string
+      const offset = ((currentPage - 1) * pageSize).toString();
+      const limit = pageSize.toString();
 
       const auctionDataResponse = await client.view({
         function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::get_active_auctions`,
@@ -98,15 +98,22 @@ const AuctionsPage = () => {
         const { nft_id, starting_price, highest_bid, highest_bidder, end_time } = auction;
 
         const nftMetadata = await fetchNFTDetails(nft_id);
-        
+
         return {
           id: nft_id,
           nftId: nft_id,
-          startingBid:  starting_price / 100000000,
+          startingBid: starting_price / 100000000,
           highestBid: highest_bid / 100000000,
           auctionEndTime: new Date(parseInt(end_time, 10) * 1000).toLocaleString(),
-          
-          nftMetadata: nftMetadata || { name: "Unknown", imageUrl: "", description: "No description", rarity: 0, price: 0, forSale: false },
+          nftMetadata: nftMetadata || {
+            name: "Unknown",
+            imageUrl: "",
+            description: "No description",
+            rarity: 0,
+            price: 0,
+            forSale: false,
+            owner: "",
+          },
         };
       });
 
@@ -122,8 +129,6 @@ const AuctionsPage = () => {
     fetchAuctions();
   }, [fetchAuctions, currentPage]);
 
-  const paginatedAuctions = auctions.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
   const showModal = (auction: Auction) => {
     setSelectedAuction(auction);
     setIsModalVisible(true);
@@ -134,9 +139,6 @@ const AuctionsPage = () => {
     if (!selectedAuction) return;
 
     const { bidAmount } = values;
-    console.log("values::", values)
-    console.log("hb::", selectedAuction.highestBid);
-    console.log("bidam::", bidAmount);
 
     if (bidAmount <= selectedAuction.highestBid) {
       message.error("Bid amount must be higher than the current highest bid.");
@@ -144,30 +146,50 @@ const AuctionsPage = () => {
     }
 
     try {
-       
       const bidInOctas = parseFloat(bidAmount) * 100000000;
       const entryFunctionPayload = {
         function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::place_bid`,
         type_arguments: [],
-        arguments: [selectedAuction.nftId, bidInOctas, account.address],
+        arguments: [MARKET_PLACE_ADDRESS, selectedAuction.nftId, bidInOctas],
       };
 
       const txnResponse = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
       console.log("Transaction Response:", txnResponse);
       await client.waitForTransaction(txnResponse.hash);
       message.success(`Bid placed successfully!`);
-      setIsModalVisible(false); // Close modal after placing bid
-      fetchAuctions(); // Refresh auction list
+      setIsModalVisible(false);
+      fetchAuctions();
     } catch (error) {
       console.error("Error placing bid:", error);
       message.error("Failed to place bid.");
     }
   };
 
+  const handleEndAuction = async (nftId: number) => {
+    if (!account) return;
+
+    try {
+      const entryFunctionPayload = {
+        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::end_auction`,
+        type_arguments: [],
+        arguments: [MARKET_PLACE_ADDRESS, nftId],
+      };
+
+      const txnResponse = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
+      console.log("Transaction Response:", txnResponse);
+      await client.waitForTransaction(txnResponse.hash);
+      message.success(`Auction ended successfully!`);
+      fetchAuctions();
+    } catch (error) {
+      console.error("Error ending auction:", error);
+      message.error("Failed to end auction.");
+    }
+  };
+
   return (
     <div>
       <Row gutter={[24, 24]}>
-        {paginatedAuctions.map((auction) => (
+        {auctions.map((auction) => (
           <Col key={auction.id} xs={24} sm={12} md={8} lg={8} xl={6}>
             <Card
               hoverable
@@ -181,6 +203,15 @@ const AuctionsPage = () => {
                 <Button type="link" onClick={() => showModal(auction)}>
                   Place Bid
                 </Button>,
+                auction.nftMetadata.owner === account?.address && (
+                  <Button
+                    type="link"
+                    danger
+                    onClick={() => handleEndAuction(auction.nftId)}
+                  >
+                    End Auction
+                  </Button>
+                ),
               ]}
             >
               {auction.nftMetadata.imageUrl && (
@@ -220,25 +251,12 @@ const AuctionsPage = () => {
         title="Place Your Bid"
         visible={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
-        footer={null} // Disable default footer
+        footer={null}
       >
         <Form onFinish={handlePlaceBid}>
-          <Form.Item
-            name="bidAmount"
-            label="Bid Amount"
-            // rules={[
-            //   { required: true, message: "Please enter a bid amount" },
-            //   { type: "number", min: selectedAuction?.highestBid , 
-            //     message: `Bid must be greater than ${selectedAuction?.highestBid} APT` 
-            // }
-            // ]}
-          >
-            <Input
-              placeholder="Enter bid amount"
-              type="number"
-            />
+          <Form.Item name="bidAmount" label="Bid Amount">
+            <Input placeholder="Enter bid amount" type="number" />
           </Form.Item>
-
           <Form.Item>
             <Button type="primary" htmlType="submit" style={{ width: "100%" }}>
               Place Bid
