@@ -229,7 +229,9 @@ const AuctionsPage = () => {
                 <p>Highest Bid: {auction.highestBid} APT</p>
               </div>
               <div>
-                <h4>NFT Details:</h4>
+                <hr></hr>
+              
+                <h4> {auction.nftMetadata.name}</h4>
                 <p>{auction.nftMetadata.description}</p>
                 <p>Rarity: {auction.nftMetadata.rarity}</p>
               </div>

@@ -273,7 +273,7 @@ const MyNFTs: React.FC = () => {
               <Meta title={nft.name} description={`Rarity: ${nft.rarity}, Price: ${nft.price} APT`} />
               <p>ID: {nft.id}</p>
               <p>{nft.description}</p>
-              <p style={{ margin: "10px 0" }}>For Sale: {!nft.for_sale? "Yes" : "No"}</p>
+              <p style={{ margin: "10px 0" }}>For Sale: {nft.for_sale? "Yes" : "No"}</p>
               {nft.auction && <p>Auction Ending: {new Date(nft.auction.end_time * 1000).toLocaleString()}</p>}
             </Card>
           </Col>
