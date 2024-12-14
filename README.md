@@ -56,3 +56,10 @@ fnm install --lts
 npm install
 npm start
 
+
+
+###
+
+git add -A
+git commit -m "changes"
+git push
