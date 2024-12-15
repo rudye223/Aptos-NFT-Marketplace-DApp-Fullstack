@@ -5,6 +5,7 @@ import { MARKET_PLACE_ADDRESS } from "../Constants";
 import Meta from "antd/es/card/Meta";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 const { Title } = Typography;
+import { useNavigate } from "react-router-dom";
 
 type Auction = {
   id: number;
@@ -30,7 +31,7 @@ const AuctionsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedAuction, setSelectedAuction] = useState<Auction | null>(null);
-
+const navigate= useNavigate()
   const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
   const pageSize = 8;
 
@@ -228,13 +229,13 @@ const AuctionsPage = () => {
                   style={{ width: "100%", height: "auto" }}
                 />
               )}
-              <div>
+              <div    onClick={() => navigate(`/nft-detail/${auction.nftMetadata.id}`)}>
                 <h4>Auction Details:</h4>
                 <p>Auction End Time: {auction.auctionEndTime}</p>
                 <p>Starting Bid: {auction.startingBid} APT</p>
                 <p>Highest Bid: {auction.highestBid} APT</p>
               </div>
-              <div>
+              <div    onClick={() => navigate(`/nft-detail/${auction.nftMetadata.id}`)}>
                 <hr></hr>
               
                 <h4> {auction.nftMetadata.name}</h4>

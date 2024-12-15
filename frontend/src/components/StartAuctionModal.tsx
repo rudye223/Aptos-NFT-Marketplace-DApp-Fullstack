@@ -33,6 +33,13 @@ const StartAuctionModal: React.FC<StartAuctionModalProps> = ({
       return;
     }
 
+    const currentTime = dayjs(); // Get the current time
+      // Check if the auction end time is in the past
+      if (endDateTime.isBefore(currentTime, "second")) {
+        message.error("Auction end time cannot be in the past.");
+        return;
+      } 
+
     try {
       const precision = 100000000; // This assumes 8 decimals for the token
       const startingPriceInOctas = BigInt(Math.ceil(parseFloat(startingPrice) * precision));

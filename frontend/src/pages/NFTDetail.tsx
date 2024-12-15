@@ -181,7 +181,7 @@ const NFTDetail: React.FC = () => {
           <Row gutter={[16, 16]}>
             <Col span={12}>
               <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}><Text strong>NFT ID:</Text> {nftDetails.id}</Paragraph>
-              <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}><Text strong>Price:</Text> {nftDetails.price} APT</Paragraph>
+              <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}><Text strong>Price:</Text> {auctionData? `Auction`:`${nftDetails.price}APT`} </Paragraph>
             </Col>
             <Col span={12}>
               <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}><Text strong>Rarity:</Text> {rarityLabels[nftDetails.rarity]}</Paragraph>
