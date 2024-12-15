@@ -5,6 +5,10 @@ import { useParams } from "react-router-dom";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { MARKET_PLACE_ADDRESS } from "../Constants";
 import { CheckOutlined, EditOutlined, DollarCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import ConfirmPurchaseModal from "../components/ConfirmPurchaseModal";
+import PlaceBidModal from "../components/PlaceBidModal";
+import StartAuctionModal from "../components/StartAuctionModal";
+import ListForSaleModal from "../components/ListForSaleModal";
 
 const { Title, Paragraph, Text } = Typography;
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
@@ -27,13 +31,12 @@ const NFTDetail: React.FC = () => {
   const [nftDetails, setNftDetails] = useState<any>(null);
   const [auctionData, setAuctionData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [salePrice, setSalePrice] = useState<string>("");
-  const [startingBid, setStartingBid] = useState<string>("");
-  const [auctionDuration, setAuctionDuration] = useState<string>("");
+  
   const { account } = useWallet();
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isListModalVisible, setIsListModalVisible] = useState(false);
+  
   const [isAuctionModalVisible, setIsAuctionModalVisible] = useState(false);
-  const [bidAmount, setBidAmount] = useState<string>("");
+ 
   const [isBidModalVisible, setIsBidModalVisible] = useState(false);
   const [isBuyModalVisible, setIsBuyModalVisible] = useState(false);
   useEffect(() => {
@@ -109,68 +112,26 @@ const NFTDetail: React.FC = () => {
       setLoading(false);
     }
   };
-  const handleConfirmListing = async () => {
-    if (!salePrice) return;
-
-    try {
-      const priceInOctas = parseFloat(salePrice) * 100000000;
-
-      const entryFunctionPayload = {
-        type: "entry_function_payload",
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::list_for_sale`,
-        type_arguments: [],
-        arguments: [MARKET_PLACE_ADDRESS, nftDetails.id.toString(), priceInOctas.toString()],
-      };
-
-      const response = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
-      await client.waitForTransaction(response.hash);
-
-      message.success("NFT listed for sale successfully!");
-      setSalePrice("");
-      await fetchNFTData()
-      setIsModalVisible(false);
-
-    } catch (error) {
-      console.error("Error listing NFT for sale:", error);
-      message.error("Failed to list NFT for sale.");
-    }
-  };
-
-  const handleConfirmAuction = async () => {
-    if (!startingBid || !auctionDuration) return;
-
-    try {
-      const bidInOctas = parseFloat(startingBid) * 100000000;
-      const durationInSeconds = parseInt(auctionDuration);
-
-      const entryFunctionPayload = {
-        type: "entry_function_payload",
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::start_auction`,
-        type_arguments: [],
-        arguments: [
-          MARKET_PLACE_ADDRESS,
-          nftDetails.id.toString(),
-          bidInOctas.toString(),
-          durationInSeconds.toString(),
-        ],
-      };
-
-      const response = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
-      await client.waitForTransaction(response.hash);
-
-      message.success("Auction started successfully!");
-      setStartingBid("");
-      setAuctionDuration("");
-      setIsAuctionModalVisible(false);
-      await fetchNFTData()
-    } catch (error) {
-      console.error("Error starting auction:", error);
-      message.error("Failed to start auction.");
-    }
-  };
+   
   const handleEndSale = async () => {
-    // Logic for ending the sale (e.g., calling a smart contract function)
-    // Update state to reflect that the NFT is no longer for sale
+    if (!account) return;
+    try {
+    const entryFunctionPayload = {
+            type: "entry_function_payload",
+            function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::end_sale`,
+            type_arguments: [],
+            arguments: [MARKET_PLACE_ADDRESS, nftDetails.id.toString() ],
+          };
+    
+          const response = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
+          await client.waitForTransaction(response.hash);
+    
+          message.success("NFT sale ended successfully!");
+          await fetchNFTData()
+        } catch (error) {
+          console.error("Error ending NFT sale:", error);
+          message.error("Failed to end auction.");
+        }
   };
 
   const handleEndAuction = async (nftId: number) => {
@@ -193,79 +154,10 @@ const NFTDetail: React.FC = () => {
       message.error("Failed to end auction.");
     }
   };
-  const handlePlaceBid = async () => {
-    console.log("bid amount::", bidAmount)
-    if (!bidAmount || !auctionData) {
-      message.error("Please enter a valid bid amount.");
-      return;
-    }
-    if (bidAmount <= auctionData.highest_bid) {
-      message.error("Bid amount must be higher than the current highest bid.");
-      return;
-    }
-    const precision = 100000000; // This assumes 8 decimals for the token
-
-    // Step 2: Scale the bid amount to avoid floating point precision issues
-    const bidInOctas = BigInt(Math.ceil(parseFloat(bidAmount) * precision));
-
-    try {
-      const entryFunctionPayload = {
-        type: "entry_function_payload",
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::place_bid`,
-        type_arguments: [],
-        arguments: [
-          MARKET_PLACE_ADDRESS,
-          nftDetails.id.toString(),
-          bidInOctas.toString(),
-        ],
-      };
-
-      const response = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
-      await client.waitForTransaction(response.hash);
-
-      message.success("Bid placed successfully!");
-      setBidAmount(""); // Clear bid input
-      setIsBidModalVisible(false); // Close modal
-      await fetchNFTData()
-    } catch (error) {
-      console.error("Error placing bid:", error);
-      message.error("Failed to place bid.");
-    }
-  };
+   
   const handleBuyClick = () => {
 
     setIsBuyModalVisible(true);
-  };
-
-  const handleCancelBuy = () => {
-    setIsBuyModalVisible(false);
-
-  };
-
-  const handleConfirmPurchase = async () => {
-    if (!nftDetails) return;
-
-    try {
-      const priceInOctas = nftDetails.price * 100000000;
-
-      const entryFunctionPayload = {
-        type: "entry_function_payload",
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::purchase_nft`,
-        type_arguments: [],
-        arguments: [MARKET_PLACE_ADDRESS, nftDetails.id.toString(), priceInOctas.toString()],
-      };
-
-      const response = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
-      await client.waitForTransaction(response.hash);
-
-      message.success("NFT purchased successfully!");
-      setIsBuyModalVisible(false);
-      await fetchNFTData()
-
-    } catch (error) {
-      console.error("Error purchasing NFT:", error);
-      message.error("Failed to purchase NFT.");
-    }
   };
 
   if (loading) {
@@ -349,7 +241,7 @@ const NFTDetail: React.FC = () => {
                     <Button
                       type="primary"
                       block
-                      onClick={() => setIsModalVisible(true)}
+                      onClick={() => setIsListModalVisible(true)}
                       icon={<DollarCircleOutlined />}
                     >
                       List for Sale
@@ -410,96 +302,31 @@ const NFTDetail: React.FC = () => {
       )}
 
 
-      {/* List for Sale Modal */}
-      <Modal
-        title="List NFT for Sale"
-        visible={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        footer={null}
-        destroyOnClose
-      >
-        <Input
-          placeholder="Enter sale price in APT"
-          value={salePrice}
-          onChange={(e) => setSalePrice(e.target.value)}
-          style={{ marginBottom: 20 }}
-        />
-        <Row justify="end">
-          <Button onClick={() => setIsModalVisible(false)} style={{ marginRight: 10 }}>
-            Cancel
-          </Button>
-          <Button type="primary" onClick={handleConfirmListing} icon={<CheckOutlined />}>
-            Confirm Listing
-          </Button>
-        </Row>
-      </Modal>
-
-      {/* Start Auction Modal */}
-      <Modal
-        title="Start Auction"
-        visible={isAuctionModalVisible}
-        onCancel={() => setIsAuctionModalVisible(false)}
-        footer={null}
-        destroyOnClose
-      >
-        <Input
-          placeholder="Enter starting bid in APT"
-          value={startingBid}
-          onChange={(e) => setStartingBid(e.target.value)}
-          style={{ marginBottom: 10 }}
-        />
-        <Input
-          placeholder="Enter auction duration in seconds"
-          value={auctionDuration}
-          onChange={(e) => setAuctionDuration(e.target.value)}
-          style={{ marginBottom: 20 }}
-        />
-        <Row justify="end">
-          <Button onClick={() => setIsAuctionModalVisible(false)} style={{ marginRight: 10 }}>
-            Cancel
-          </Button>
-          <Button type="primary" onClick={handleConfirmAuction} icon={<CheckOutlined />}>
-            Confirm Auction
-          </Button>
-        </Row>
-      </Modal>
-
-      {/* Place Bid Modal */}
-      <Modal
-        title="Place Bid"
-        visible={isBidModalVisible}
-        onCancel={() => setIsBidModalVisible(false)}
-        footer={null}
-        destroyOnClose
-      >
-        <Input
-          placeholder="Enter bid amount in APT"
-          value={bidAmount}
-          onChange={(e) => setBidAmount(e.target.value)}
-          style={{ marginBottom: 20 }}
-        />
-        <Row justify="end">
-          <Button onClick={() => setIsBidModalVisible(false)} style={{ marginRight: 10 }}>
-            Cancel
-          </Button>
-          <Button type="primary" onClick={handlePlaceBid} icon={<CheckOutlined />}>
-            Place Bid
-          </Button>
-        </Row>
-      </Modal>
-
-      {/* Buy Modal */}
-      <Modal
-        title="Confirm Purchase"
-        visible={isBuyModalVisible}
-        onOk={handleConfirmPurchase}
-        onCancel={handleCancelBuy}
-        okText="Confirm"
-        cancelText="Cancel"
-      >
-        <p>Are you sure you want to buy this NFT?</p>
-        <p>Price: {nftDetails?.price} APT</p>
-      </Modal>
+    <ListForSaleModal
+        isVisible={isListModalVisible}
+        onClose={() => setIsListModalVisible(false)}
+        nftDetails={nftDetails}
+        onRefresh={fetchNFTData}
+      />
+      <StartAuctionModal
+        isVisible={isAuctionModalVisible}
+        onClose={() => setIsAuctionModalVisible(false)}
+        nftDetails={nftDetails}
+        onRefresh={fetchNFTData}
+      />
+      <PlaceBidModal
+        isVisible={isBidModalVisible}
+        onClose={() => setIsBidModalVisible(false)}
+        nftDetails={nftDetails}
+        auction={auctionData}
+        onRefresh={fetchNFTData}
+      />
+      <ConfirmPurchaseModal
+        isVisible={isBuyModalVisible}
+        onClose={() => setIsBuyModalVisible(false)}
+        nftDetails={nftDetails}
+        onRefresh={fetchNFTData}
+      />
     </div>
   );
 };

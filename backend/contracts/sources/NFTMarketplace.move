@@ -12,6 +12,7 @@ address 0x7af8a296ba5095b66fb7283a6e463e1bcb7fbc6e7101071c870a6cd165cb3dd1 {
     const E_NO_AUCTION_EXISTS: u64 = 200;
     const E_BID_TOO_LOW: u64 = 201;
     const E_AUCTION_NOT_ENDED: u64 = 202;
+    const E_AUCTION_EXPIRED: u64 = 203;
     const E_CALLER_NOT_OWNER: u64 = 300;
     const E_TRANSFER_TO_SAME_OWNER: u64 = 301;
     const E_INVALID_PRICE: u64 = 400;
@@ -111,6 +112,10 @@ address 0x7af8a296ba5095b66fb7283a6e463e1bcb7fbc6e7101071c870a6cd165cb3dd1 {
 
         let auction = option::borrow_mut(auction_opt);
 
+    // Check if the auction has expired
+       let current_time = timestamp::now_seconds();
+        assert!(current_time < auction.end_time, E_AUCTION_EXPIRED);
+        
         assert!(bid_amount > auction.highest_bid, E_BID_TOO_LOW);
 
         coin::transfer<aptos_coin::AptosCoin>(account, marketplace_addr, bid_amount);
@@ -344,6 +349,24 @@ public entry fun list_for_sale(account: &signer, marketplace_addr: address, nft_
 
     nft_ref.for_sale = true;
     nft_ref.price = price;
+}
+
+// End Sale for Listed NFT
+public entry fun end_sale(account: &signer, marketplace_addr: address, nft_id: u64) acquires Marketplace {
+    let marketplace = borrow_global_mut<Marketplace>(marketplace_addr);
+    let nft_ref = vector::borrow_mut(&mut marketplace.nfts, nft_id);
+
+    // Ensure the caller is the owner of the NFT
+    assert!(nft_ref.owner == signer::address_of(account), E_CALLER_NOT_OWNER);
+
+    // Ensure the NFT is currently listed for sale
+    assert!(nft_ref.for_sale, E_NFT_NOT_FOR_SALE);
+
+    // Set the `for_sale` flag to false
+    nft_ref.for_sale = false;
+    nft_ref.price = 0;
+
+  
 }
 
    public fun min(a: u64, b: u64): u64 {
