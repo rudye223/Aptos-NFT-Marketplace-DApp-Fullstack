@@ -11,6 +11,8 @@ import { AptosClient } from "aptos";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { MARKET_PLACE_ADDRESS } from "./Constants";
 import AuctionPage from "./pages/AuctionPage";
+import Transfer from "./pages/Transfer";
+import NFTDetail from "./pages/NFTDetail";
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
  
 function App() {
@@ -54,6 +56,8 @@ function App() {
           <Route path="/" element={<MarketView marketplaceAddr={MARKET_PLACE_ADDRESS} />} />
           <Route path="/my-nfts" element={<MyNFTs />} />
           <Route path="/auctions" element={<AuctionPage />} />
+          <Route path="/transfer" element={<Transfer />} />
+          <Route path="/nft-detail/:tokenId" element={<NFTDetail />} />
         </Routes>
 
         <Modal

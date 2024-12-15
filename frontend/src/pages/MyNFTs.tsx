@@ -5,6 +5,7 @@ import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { MARKET_PLACE_ADDRESS } from "../Constants";
 const { Title } = Typography;
 const { Meta } = Card;
+import { useNavigate } from "react-router-dom";
 
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
 
@@ -29,7 +30,7 @@ const MyNFTs: React.FC = () => {
   const [nfts, setNfts] = useState<NFT[]>([]);
   const [totalNFTs, setTotalNFTs] = useState(0);
   const { account, signAndSubmitTransaction } = useWallet();
-   
+  const navigate= useNavigate()
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isAuctionModalVisible, setIsAuctionModalVisible] = useState(false); // Auction modal
   const [selectedNft, setSelectedNft] = useState<NFT | null>(null);
@@ -146,8 +147,11 @@ const MyNFTs: React.FC = () => {
     if (!selectedNft || !salePrice) return;
   
     try {
-      const priceInOctas = parseFloat(salePrice) * 100000000;
-  
+      const precision = 100000000; // This assumes 8 decimals for the token
+
+      // Step 2: Scale the  amount to avoid floating point precision issues
+      const priceInOctas = BigInt(Math.ceil(parseFloat(salePrice) * precision));
+      
       const entryFunctionPayload = {
         type: "entry_function_payload",
         function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::list_for_sale`,
@@ -173,7 +177,13 @@ const MyNFTs: React.FC = () => {
     if (!selectedNft || !startingBid || !auctionDuration) return;
 
     try {
-      const bidInOctas = parseFloat(startingBid) * 100000000;
+      const precision = 100000000; // This assumes 8 decimals for the token
+
+      // Step 2: Scale the bid amount to avoid floating point precision issues
+      const bidInOctas = BigInt(Math.ceil(parseFloat(startingBid) * precision));
+      
+
+     
       const durationInSeconds = parseInt(auctionDuration);
 
       const entryFunctionPayload = {
@@ -249,6 +259,7 @@ const MyNFTs: React.FC = () => {
                 minWidth: "220px",
                 margin: "0 auto",
               }}
+             
               cover={<img alt={nft.name} src={nft.uri} />}
               actions={[
                 nft.auction ? (
@@ -270,11 +281,14 @@ const MyNFTs: React.FC = () => {
                 )
               ]}
             >
-              <Meta title={nft.name} description={`Rarity: ${nft.rarity}, Price: ${nft.price} APT`} />
+              <div onClick={() => navigate(`/nft-detail/${nft.id}`)}>
+              <Meta 
+              title={nft.name} description={`Rarity: ${nft.rarity}, Price: ${nft.price} APT`} />
               <p>ID: {nft.id}</p>
               <p>{nft.description}</p>
               <p style={{ margin: "10px 0" }}>For Sale: {nft.for_sale? "Yes" : "No"}</p>
               {nft.auction && <p>Auction Ending: {new Date(nft.auction.end_time * 1000).toLocaleString()}</p>}
+              </div>
             </Card>
           </Col>
         ))}

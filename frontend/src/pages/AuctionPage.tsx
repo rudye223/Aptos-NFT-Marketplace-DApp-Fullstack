@@ -148,7 +148,11 @@ const AuctionsPage = () => {
     }
 
     try {
-      const bidInOctas = parseFloat(bidAmount) * 100000000;
+      const precision = 100000000; // This assumes 8 decimals for the token
+
+      // Step 2: Scale the bid amount to avoid floating point precision issues
+      const bidInOctas = BigInt(Math.ceil(parseFloat(bidAmount) * precision));
+  
       const entryFunctionPayload = {
         function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::place_bid`,
         type_arguments: [],

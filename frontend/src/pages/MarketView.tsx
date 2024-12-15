@@ -217,6 +217,9 @@ const navigate= useNavigate()
                 ),
               ]}
             >
+              <div
+                onClick={() => navigate(`/nft-detail/${nft.id}`)}
+                >
               {/* Rarity Tag */}
               <Tag
                 color={rarityColors[nft.rarity]}
@@ -229,6 +232,7 @@ const navigate= useNavigate()
               <p>{nft.description}</p>
               <p>ID: {nft.id}</p>
               <p>Owner: {truncateAddress(nft.owner)}</p>
+              </div>
             </Card>
           </Col>
         ))}
