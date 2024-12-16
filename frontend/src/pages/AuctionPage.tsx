@@ -164,7 +164,12 @@ const AuctionsPage = () => {
   };
 
   return (
-    <div>
+    <div  style={{
+      textAlign: "center",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+    }}>
       <Title level={2} style={{ marginBottom: "20px", textAlign: "center" }}>Ongoing Auctions</Title>
       <Row gutter={[24, 24]}>
         {auctions.map((auction) => (
@@ -185,7 +190,7 @@ const AuctionsPage = () => {
                   <Button
                     type="link"
                     danger
-                    onClick={() => handleEndAuction(auction.nftMetadata.id)}
+                    onClick={() => handleEndAuction(auction.id)}
                   >
                     End Auction
                   </Button>
@@ -199,13 +204,13 @@ const AuctionsPage = () => {
                   style={{ width: "100%", height: "auto" }}
                 />
               )}
-              <div onClick={() => navigate(`/nft-detail/${auction.nftMetadata.id}`)}>
+              <div onClick={() => navigate(`/nft-detail/${auction.id}`)}>
                 <h4>Auction Details:</h4>
                 <p>Auction End Time: {auction.end_time }</p>
                 <p>Starting Bid: {auction.starting_bid} APT</p>
                 <p>Highest Bid: {auction.highest_bid} APT</p>
               </div>
-              <div onClick={() => navigate(`/nft-detail/${auction.nftMetadata.id}`)}>
+              <div onClick={() => navigate(`/nft-detail/${auction.id}`)}>
                 <hr />
                 <h4>{auction.nftMetadata.name}</h4>
                 <p>{auction.nftMetadata.description}</p>

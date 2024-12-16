@@ -55,7 +55,7 @@ const StartAuctionModal: React.FC<StartAuctionModalProps> = ({
         type: "entry_function_payload",
         function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::start_auction`,
         type_arguments: [],
-        arguments: [
+        arguments: [ 
           MARKET_PLACE_ADDRESS,
           nftDetails.id.toString(),
           startingPriceInOctas.toString(),

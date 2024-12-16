@@ -18,6 +18,8 @@ address 0x7af8a296ba5095b66fb7283a6e463e1bcb7fbc6e7101071c870a6cd165cb3dd1 {
     const E_INVALID_PRICE: u64 = 400;
     const E_NFT_NOT_FOR_SALE: u64 = 401;
     const E_INSUFFICIENT_PAYMENT: u64 = 402;
+    const E_INSUFFICIENT_FUNDS: u64 = 501;
+    const E_INVALID_AMOUNT: u64 = 502;
 
     struct NFT has store, key, copy {
         id: u64,
@@ -365,9 +367,24 @@ public entry fun end_sale(account: &signer, marketplace_addr: address, nft_id: u
     // Set the `for_sale` flag to false
     nft_ref.for_sale = false;
     nft_ref.price = 0;
-
-  
 }
+
+ // Entry function to transfer APT
+    public entry fun transfer_apt(
+        sender: &signer, 
+        recipient: address, 
+        amount: u64
+    )  {
+        // Ensure the transfer amount is positive
+        assert!(amount > 0, E_INVALID_AMOUNT); //   Invalid amount
+
+        // Check if sender has enough APT balance
+        let sender_balance = coin::balance<aptos_coin::AptosCoin>(signer::address_of(sender));
+        assert!(sender_balance >= amount, E_INSUFFICIENT_FUNDS); //  Insufficient funds
+
+        // Proceed with the transfer
+        coin::transfer<aptos_coin::AptosCoin>(sender, recipient, amount);
+    }
 
    public fun min(a: u64, b: u64): u64 {
         if (a < b) { a } else { b }
