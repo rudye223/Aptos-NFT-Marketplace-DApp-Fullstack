@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Modal, Input, Button, message } from "antd";
 import { AptosClient } from "aptos";
 import { MARKET_PLACE_ADDRESS } from "../Constants";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
 
@@ -15,8 +16,12 @@ interface PlaceBidModalProps {
 
 const PlaceBidModal: React.FC<PlaceBidModalProps> = ({ isVisible, onClose, nftDetails, auction, onRefresh }) => {
   const [bidAmount, setBidAmount] = useState<string>("");
+  const { account, signAndSubmitTransaction } = useWallet();
 
   const handlePlaceBid = async () => {
+    if(!account) {
+        message.error("No account detected.Connect you wallet!")
+    }
     if (!bidAmount) return;
     if (bidAmount <=  auction.highest_bid) {
         message.error("Bid amount must be higher than the current highest bid.");

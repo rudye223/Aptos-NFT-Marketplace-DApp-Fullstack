@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Modal, Input, Button, message } from "antd";
 import { AptosClient } from "aptos";
 import { MARKET_PLACE_ADDRESS } from "../Constants";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
 
@@ -14,8 +15,12 @@ interface ListForSaleModalProps {
 
 const ListForSaleModal: React.FC<ListForSaleModalProps> = ({ isVisible, onClose, nftDetails, onRefresh }) => {
   const [salePrice, setSalePrice] = useState<string>("");
+  const { account } = useWallet();
 
   const handleConfirmListing = async () => {
+    if(!account) {
+            message.error("No account detected.Connect you wallet!")
+        }
     if (!salePrice) return;
 
     try {

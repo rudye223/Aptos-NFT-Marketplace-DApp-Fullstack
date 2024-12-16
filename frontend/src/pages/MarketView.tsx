@@ -4,6 +4,7 @@ import { AptosClient } from "aptos";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { MARKET_PLACE_ADDRESS } from "../Constants";
 import { useNavigate } from "react-router-dom";
+import ConfirmPurchaseModal from "../components/ConfirmPurchaseModal";
 
 const { Title } = Typography;
 const { Meta } = Card;
@@ -45,7 +46,7 @@ const truncateAddress = (address: string, start = 6, end = 4) => {
 };
 
 const MarketView: React.FC<MarketViewProps> = ({ marketplaceAddr }) => {
-  const { signAndSubmitTransaction } = useWallet();
+  
   const [nfts, setNfts] = useState<NFT[]>([]);
   const [rarity, setRarity] = useState<'all' | number>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -120,37 +121,8 @@ const navigate= useNavigate()
     setIsBuyModalVisible(true);
   };
 
-  const handleCancelBuy = () => {
-    setIsBuyModalVisible(false);
-    setSelectedNft(null);
-  };
-
-  const handleConfirmPurchase = async () => {
-    if (!selectedNft) return;
-
-    try {
-      const priceInOctas = selectedNft.price * 100000000;
-
-      const entryFunctionPayload = {
-        type: "entry_function_payload",
-        function: `${marketplaceAddr}::NFTMarketplace::purchase_nft`,
-        type_arguments: [],
-        arguments: [marketplaceAddr, selectedNft.id.toString(), priceInOctas.toString()],
-      };
-
-      const response = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
-      await client.waitForTransaction(response.hash);
-
-      message.success("NFT purchased successfully!");
-      setIsBuyModalVisible(false);
-      handleFetchNfts(rarity === 'all' ? undefined : rarity); // Refresh NFT list
-      console.log("signAndSubmitTransaction:", signAndSubmitTransaction);
-    } catch (error) {
-      console.error("Error purchasing NFT:", error);
-      message.error("Failed to purchase NFT.");
-    }
-  };
-
+ 
+ 
   const paginatedNfts = nfts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
@@ -207,7 +179,7 @@ const navigate= useNavigate()
               cover={<img alt={nft.name} src={nft.uri} />}
               actions={[
                 nft.auction ? (
-                  <Button type="link"  onClick={() => navigate('/auctions')}>
+                  <Button type="link"  onClick={() => navigate(`/nft-detail/${nft.id}`)}>
                     Ongoing Auction
                   </Button>
                 ) : (
@@ -250,17 +222,13 @@ const navigate= useNavigate()
       </div>
 
       {/* Buy Modal */}
-      <Modal
-        title="Confirm Purchase"
-        visible={isBuyModalVisible}
-        onOk={handleConfirmPurchase}
-        onCancel={handleCancelBuy}
-        okText="Confirm"
-        cancelText="Cancel"
-      >
-        <p>Are you sure you want to buy this NFT?</p>
-        <p>Price: {selectedNft?.price} APT</p>
-      </Modal>
+      <ConfirmPurchaseModal
+  isVisible={isBuyModalVisible}
+  onClose={() => setIsBuyModalVisible(false)}
+  nftDetails={selectedNft}
+  onRefresh={() => handleFetchNfts(undefined)}
+/>
+
     </div>
   );
 };

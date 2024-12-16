@@ -39,13 +39,38 @@ const NFTDetail: React.FC = () => {
  
   const [isBidModalVisible, setIsBidModalVisible] = useState(false);
   const [isBuyModalVisible, setIsBuyModalVisible] = useState(false);
+  const [countdown, setCountdown] = useState<string>("");
+
+
+
   useEffect(() => {
-
-
     fetchNFTData();
   }, [tokenId, account]);
+
+  useEffect(() => {
+    if (auctionData?.end_time) {
+      const interval = setInterval(() => {
+        const now = new Date().getTime();
+        const endTime = auctionData.end_time * 1000;
+        const timeLeft = endTime - now;
+
+        if (timeLeft <= 0) {
+          clearInterval(interval);
+          setCountdown("Auction expired");
+        } else {
+          const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+          setCountdown(`${hours}h ${minutes}m ${seconds}s`);
+        }
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [auctionData]);
+
   const fetchNFTData = async () => {
-    if (!tokenId) return;
+    if (!tokenId && !account) return;
 
     setLoading(true);
 
@@ -127,6 +152,8 @@ const NFTDetail: React.FC = () => {
           await client.waitForTransaction(response.hash);
     
           message.success("NFT sale ended successfully!");
+          setNftDetails(null)
+
           await fetchNFTData()
         } catch (error) {
           console.error("Error ending NFT sale:", error);
@@ -148,6 +175,7 @@ const NFTDetail: React.FC = () => {
       console.log("Transaction Response:", txnResponse);
       await client.waitForTransaction(txnResponse.hash);
       message.success(`Auction ended successfully!`);
+      setAuctionData(null)
       await fetchNFTData()
     } catch (error) {
       console.error("Error ending auction:", error);
@@ -181,7 +209,7 @@ const NFTDetail: React.FC = () => {
           <Row gutter={[16, 16]}>
             <Col span={12}>
               <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}><Text strong>NFT ID:</Text> {nftDetails.id}</Paragraph>
-              <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}><Text strong>Price:</Text> {auctionData? `Auction`:`${nftDetails.price}APT`} </Paragraph>
+              <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}><Text strong>Price:</Text> {auctionData? `Auction`:`${nftDetails.price} APT`} </Paragraph>
             </Col>
             <Col span={12}>
               <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}><Text strong>Rarity:</Text> {rarityLabels[nftDetails.rarity]}</Paragraph>
@@ -197,6 +225,7 @@ const NFTDetail: React.FC = () => {
               <hr></hr>
               <Title level={4}>Auction Information</Title>
               <p>Auction End Time:  {new Date(auctionData.end_time * 1000).toLocaleString()}</p>
+              <p>End Countdown:<span style={{ color: "red" }}> {countdown}</span></p>
               <p>Starting Bid: {auctionData.starting_price} APT</p>
               <p>Highest Bid: {auctionData.highest_bid} APT</p>
             </div>

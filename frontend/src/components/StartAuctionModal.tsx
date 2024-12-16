@@ -3,7 +3,7 @@ import { Modal, Input, Button, message, DatePicker } from "antd";
 import { AptosClient } from "aptos";
 import { MARKET_PLACE_ADDRESS } from "../Constants";
 import dayjs, { Dayjs } from "dayjs";  // Use dayjs instead of moment
-
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
 
 interface StartAuctionModalProps {
@@ -21,6 +21,7 @@ const StartAuctionModal: React.FC<StartAuctionModalProps> = ({
 }) => {
   const [startingPrice, setStartingPrice] = useState<string>("");
   const [endDateTime, setEndDateTime] = useState<Dayjs | null>(null); // store the selected end date/time
+  const { account } = useWallet();
 
   // Function to disable past dates (using Dayjs)
   const disablePastDates = (currentDate: Dayjs) => {
@@ -28,6 +29,9 @@ const StartAuctionModal: React.FC<StartAuctionModalProps> = ({
   };
 
   const handleStartAuction = async () => {
+    if(!account) {
+            message.error("No account detected.Connect you wallet!")
+        }
     if (!startingPrice || !endDateTime) {
       message.error("Please fill in all fields.");
       return;

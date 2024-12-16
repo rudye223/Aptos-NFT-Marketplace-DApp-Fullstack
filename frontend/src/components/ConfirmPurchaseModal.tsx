@@ -2,6 +2,7 @@ import React from "react";
 import { Modal, Button, message } from "antd";
 import { AptosClient } from "aptos";
 import { MARKET_PLACE_ADDRESS } from "../Constants";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
 
@@ -13,7 +14,12 @@ interface ConfirmPurchaseModalProps {
 }
 
 const ConfirmPurchaseModal: React.FC<ConfirmPurchaseModalProps> = ({ isVisible, onClose, nftDetails, onRefresh }) => {
+  const { account } = useWallet();
+
   const handleConfirmPurchase = async () => {
+    if(!account) {
+            message.error("No account detected.Connect you wallet!")
+        }
     try {
        
         const precision = 100000000; // This assumes 8 decimals for the token

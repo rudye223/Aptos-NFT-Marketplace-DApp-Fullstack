@@ -6,6 +6,8 @@ import { MARKET_PLACE_ADDRESS } from "../Constants";
 const { Title } = Typography;
 const { Meta } = Card;
 import { useNavigate } from "react-router-dom";
+import StartAuctionModal from "../components/StartAuctionModal";
+import ListForSaleModal from "../components/ListForSaleModal";
 
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
 
@@ -34,9 +36,7 @@ const MyNFTs: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isAuctionModalVisible, setIsAuctionModalVisible] = useState(false); // Auction modal
   const [selectedNft, setSelectedNft] = useState<NFT | null>(null);
-  const [salePrice, setSalePrice] = useState<string>("");
-  const [startingBid, setStartingBid] = useState<string>(""); // Starting bid for auction
-  const [auctionDuration, setAuctionDuration] = useState<string>(""); // Auction duration
+  
 
   const fetchUserNFTs = useCallback(async () => {
     if (!account) return;
@@ -120,6 +120,12 @@ const MyNFTs: React.FC = () => {
     }
   }, [account, MARKET_PLACE_ADDRESS]);
 
+   
+
+  useEffect(() => {
+    fetchUserNFTs();
+  }, [fetchUserNFTs, currentPage]);
+
   const handleSellClick = (nft: NFT) => {
     setSelectedNft(nft);
     setIsModalVisible(true);
@@ -127,95 +133,17 @@ const MyNFTs: React.FC = () => {
 
   const handleAuctionClick = (nft: NFT) => {
     setSelectedNft(nft);
-    setIsAuctionModalVisible(true); // Open auction modal
+    setIsAuctionModalVisible(true);
   };
 
-  const handleCancel = () => {
+  const handleModalClose = () => {
     setIsModalVisible(false);
     setSelectedNft(null);
-    setSalePrice("");
   };
-
-  const handleAuctionCancel = () => {
+  const handleAuctionModalClose = () => {
     setIsAuctionModalVisible(false);
     setSelectedNft(null);
-    setStartingBid("");
-    setAuctionDuration("");
   };
-
-  const handleConfirmListing = async () => {
-    if (!selectedNft || !salePrice) return;
-  
-    try {
-      const precision = 100000000; // This assumes 8 decimals for the token
-
-      // Step 2: Scale the  amount to avoid floating point precision issues
-      const priceInOctas = BigInt(Math.ceil(parseFloat(salePrice) * precision));
-      
-      const entryFunctionPayload = {
-        type: "entry_function_payload",
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::list_for_sale`,
-        type_arguments: [],
-        arguments: [MARKET_PLACE_ADDRESS, selectedNft.id.toString(), priceInOctas.toString()],
-      };
-  
-      // Bypass type checking
-      const response = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
-      await client.waitForTransaction(response.hash);
-  
-      message.success("NFT listed for sale successfully!");
-      setIsModalVisible(false);
-      setSalePrice("");
-      fetchUserNFTs();
-    } catch (error) {
-      console.error("Error listing NFT for sale:", error);
-      message.error("Failed to list NFT for sale.");
-    }
-  };
-
-  const handleConfirmAuction = async () => {
-    if (!selectedNft || !startingBid || !auctionDuration) return;
-
-    try {
-      const precision = 100000000; // This assumes 8 decimals for the token
-
-      // Step 2: Scale the bid amount to avoid floating point precision issues
-      const bidInOctas = BigInt(Math.ceil(parseFloat(startingBid) * precision));
-      
-
-     
-      const durationInSeconds = parseInt(auctionDuration);
-
-      const entryFunctionPayload = {
-        type: "entry_function_payload",
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::start_auction`,
-        type_arguments: [],
-        arguments: [
-          MARKET_PLACE_ADDRESS, 
-          selectedNft.id.toString(), 
-          bidInOctas.toString(),
-          durationInSeconds.toString(),
-        ],
-      };
-  
-      const response = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
-      await client.waitForTransaction(response.hash);
-  
-      message.success("Auction started successfully!");
-      setIsAuctionModalVisible(false);
-      setStartingBid("");
-      setAuctionDuration("");
-      fetchUserNFTs();
-    } catch (error) {
-      console.error("Error starting auction:", error);
-      message.error("Failed to start auction.");
-    }
-  };
-
-  useEffect(() => {
-    fetchUserNFTs();
-  }, [fetchUserNFTs, currentPage]);
-
   const paginatedNFTs = nfts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
@@ -263,31 +191,37 @@ const MyNFTs: React.FC = () => {
               cover={<img alt={nft.name} src={nft.uri} />}
               actions={[
                 nft.auction ? (
-             <></>
-                ) : ( 
-                <Button type="link" onClick={() => handleSellClick(nft)}>
-                Sell
-              </Button>
-                )
-               ,
-                nft.auction ? (
-                  <Button type="link" >
+                  <Button type="link"  onClick={() => navigate(`/nft-detail/${nft.id}`)}>
                     Ongoing Auction
                   </Button>
-                ) : (
-                  <Button type="link" onClick={() => handleAuctionClick(nft)}>
-                    Auction
+                ) : nft.for_sale ? (
+                  <Button type="link"  onClick={() => navigate(`/nft-detail/${nft.id}`)}>
+                    Ongoing Sale
                   </Button>
+                ) : (
+                  <>
+                    <Button type="link" onClick={() => handleSellClick(nft)}>
+                      Sell
+                    </Button>
+                    <Button type="link" onClick={() => handleAuctionClick(nft)}>
+                      Auction
+                    </Button>
+                  </>
                 )
               ]}
+              
             >
               <div onClick={() => navigate(`/nft-detail/${nft.id}`)}>
               <Meta 
               title={nft.name} description={`Rarity: ${nft.rarity}, Price: ${nft.price} APT`} />
               <p>ID: {nft.id}</p>
               <p>{nft.description}</p>
-              <p style={{ margin: "10px 0" }}>For Sale: {nft.for_sale? "Yes" : "No"}</p>
-              {nft.auction && <p>Auction Ending: {new Date(nft.auction.end_time * 1000).toLocaleString()}</p>}
+              {nft.auction ?(
+                  <p style={{ margin: "10px 0" }}>For Sale: Auction</p>
+              ):(
+                <p style={{ margin: "10px 0" }}>For Sale: {nft.for_sale? "Yes" : "No"}</p>
+              )}
+               {nft.auction && <p>Auction Ending: {new Date(nft.auction.end_time * 1000).toLocaleString()}</p>}
               </div>
             </Card>
           </Col>
@@ -304,78 +238,22 @@ const MyNFTs: React.FC = () => {
         />
       </div>
   
-      <Modal
-        title="Sell NFT"
-        visible={isModalVisible}
-        onCancel={handleCancel}
-        footer={[
-          <Button key="cancel" onClick={handleCancel}>
-            Cancel
-          </Button>,
-          <Button key="confirm" type="primary" onClick={handleConfirmListing}>
-            Confirm Listing
-          </Button>,
-        ]}
-      >
-        {selectedNft && (
-          <>
-            <p><strong>NFT ID:</strong> {selectedNft.id}</p>
-            <p><strong>Name:</strong> {selectedNft.name}</p>
-            <p><strong>Description:</strong> {selectedNft.description}</p>
-            <p><strong>Rarity:</strong> {selectedNft.rarity}</p>
-            <p><strong>Current Price:</strong> {selectedNft.price} APT</p>
-  
-            <Input
-              type="number"
-              placeholder="Enter sale price in APT"
-              value={salePrice}
-              onChange={(e) => setSalePrice(e.target.value)}
-              style={{ marginTop: 10 }}
-            />
-          </>
-        )}
-      </Modal>
-
-      {/* Auction Modal */}
-      <Modal
-        title="Start Auction"
-        visible={isAuctionModalVisible}
-        onCancel={handleAuctionCancel}
-        footer={[
-          <Button key="cancel" onClick={handleAuctionCancel}>
-            Cancel
-          </Button>,
-          <Button key="confirm" type="primary" onClick={handleConfirmAuction}>
-            Start Auction
-          </Button>,
-        ]}
-      >
-        {selectedNft && (
-          <>
-            <p><strong>NFT ID:</strong> {selectedNft.id}</p>
-            <p><strong>Name:</strong> {selectedNft.name}</p>
-            <p><strong>Description:</strong> {selectedNft.description}</p>
-            <p><strong>Rarity:</strong> {selectedNft.rarity}</p>
-            <p><strong>Current Price:</strong> {selectedNft.price} APT</p>
-  
-            <Input
-              type="number"
-              placeholder="Enter starting bid in APT"
-              value={startingBid}
-              onChange={(e) => setStartingBid(e.target.value)}
-              style={{ marginTop: 10 }}
-            />
-  
-            <Input
-              type="number"
-              placeholder="Enter auction duration in seconds"
-              value={auctionDuration}
-              onChange={(e) => setAuctionDuration(e.target.value)}
-              style={{ marginTop: 10 }}
-            />
-          </>
-        )}
-      </Modal>
+      {selectedNft && (
+        <ListForSaleModal
+          isVisible={isModalVisible}
+          onClose={handleModalClose}
+          nftDetails={selectedNft}
+          onRefresh={fetchUserNFTs}
+        />
+      )}
+      {selectedNft && (
+        <StartAuctionModal
+          isVisible={isAuctionModalVisible}
+          onClose={handleAuctionModalClose}
+          nftDetails={selectedNft}
+          onRefresh={fetchUserNFTs}
+        />
+      )}
     </div>
   );
 };
