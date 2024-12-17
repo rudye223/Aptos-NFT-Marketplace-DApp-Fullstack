@@ -8,23 +8,9 @@ const { Title } = Typography;
 import { useNavigate } from "react-router-dom";
 import PlaceBidModal from "../components/PlaceBidModal";
 import { rarityLabels } from "../utils/rarityUtils";
+import { Auction } from "../types/nftType";
 
-type Auction = {
-  id: number;
-  starting_bid: number;
-  highest_bid: number;
-  end_time: string;
-  nftMetadata: {
-     
-    name: string;
-    uri: string;
-    description: string;
-    rarity: number;
-    price: number;
-    for_sale: boolean;
-    owner: string; // Added owner field
-  };
-};
+
 
 const AuctionsPage = () => {
   const { account } = useWallet();

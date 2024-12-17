@@ -12,19 +12,7 @@ import ListForSaleModal from "../components/ListForSaleModal";
 import { fetchNFTDataUtil } from "../utils/fetchNFTData";  
 import { rarityColors, rarityLabels } from "../utils/rarityUtils";  
 
-const MyNFTs: React.FC = () => {
-  // Now you can use rarityColors and rarityLabels
-  const nftRarity = 3; // Just an example
-  const color = rarityColors[nftRarity];
-  const label = rarityLabels[nftRarity];
-
-  return (
-    <div style={{ color }}>
-      <h2>{label}</h2>
-      {/* Render other NFT details */}
-    </div>
-  );
-};
+  
 
 const { Title, Paragraph, Text } = Typography;
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
@@ -195,17 +183,21 @@ if (loading) {
               {auctionData ? (
                 // If auction data exists
                 nftDetails.owner === account?.address ? (
-                  <Button
-                    type="primary"
-                    block
-                    onClick={() => setIsBidModalVisible(true)} // Function to open the bid modal
+                  <Button 
+                  type="primary"
+                  block
+                  disabled={auctionData.isExpired}
+                    onClick={() => {
+                      if(auctionData.isExpired)return;
+                      setIsBidModalVisible(true)
+                    }} // Function to open the bid modal
                     icon={<DollarCircleOutlined />}
                   >
                     Place Bid
                   </Button>
                 ) : (
-                  <Button type="link">
-                    Ongoing Auction
+                  <Button type="link" disabled={auctionData.isExpired}>
+                      {auctionData?.isExpired ? "Auction Expired": "Ongoing Auction"}
                   </Button>
                 )
               ) : (
@@ -259,6 +251,7 @@ if (loading) {
                   ) : (
                     // If the user is not the owner, show the "Place Bid" button
                     <Button
+                    disabled={auctionData.isExpired}
                       type="primary"
                       block
                       onClick={() => setIsBidModalVisible(true)} // Function to open the bid modal

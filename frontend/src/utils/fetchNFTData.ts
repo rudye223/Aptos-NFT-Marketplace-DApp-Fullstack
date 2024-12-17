@@ -48,6 +48,8 @@ export const fetchNFTDataUtil = async (tokenId: string, account: string | undefi
       auction,
     };
     let auction_data =null;
+    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+
     try {
     auction_data = {
       end_time: auction.end_time,
@@ -55,11 +57,14 @@ export const fetchNFTDataUtil = async (tokenId: string, account: string | undefi
       highest_bidder: auction.highest_bidder,
       nft_id: auction.nft_id,
       starting_price: auction.starting_price / 100000000, // Convert octas to APT
+      isExpired: currentTime > auction.end_time, // Check if auction has expired
+
     };
     } catch (error) {
         console.error(`destructurng auction data error`, error);
     }
     nft.auction= auction_data
+    console.log("nft::", nft)
     return nft;
   } catch (error) {
     console.error(`Error fetching details for NFT ID ${tokenId}:`, error);

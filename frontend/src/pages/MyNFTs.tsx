@@ -10,24 +10,11 @@ import StartAuctionModal from "../components/StartAuctionModal";
 import ListForSaleModal from "../components/ListForSaleModal";
 import { fetchNFTDataUtil } from "../utils/fetchNFTData";  
 import { rarityColors, rarityLabels } from "../utils/rarityUtils";  
+import { NFT } from "../types/nftType";
 
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
 
-type NFT = {
-  id: number;
-  name: string;
-  description: string;
-  uri: string;
-  rarity: number;
-  price: number;
-  for_sale: boolean;
-  owner: string;
-  auction: { 
-    starting_bid: number; 
-    duration: number; 
-    end_time: number;
-  } | null;
-};
+ 
 const truncateAddress = (address: string, start = 6, end = 4) => {
   return `${address.slice(0, start)}...${address.slice(-end)}`;
 };
@@ -167,13 +154,13 @@ const MyNFTs: React.FC = () => {
               cover={<img alt={nft.name} src={nft.uri} />}
               actions={[
                 nft.auction ? (
-                  <Button type="link"  onClick={() => navigate(`/nft-detail/${nft.id}`)}>
-                    Ongoing Auction
+                  <Button type="link"   disabled={nft.auction?.isExpired} onClick={() => navigate(`/nft-detail/${nft.id}`)}>
+                    {nft.auction?.isExpired ? "Expired Auction": "Ongoing Auction"}
                   </Button>
                 ) : nft.for_sale ? (
                   <Button type="link"  onClick={() => navigate(`/nft-detail/${nft.id}`)}>
-                    Ongoing Sale
-                  </Button>
+                  Ongoing Sale
+                </Button>
                 ) : (
                   <>
                     <Button type="link" onClick={() => handleSellClick(nft)}>
