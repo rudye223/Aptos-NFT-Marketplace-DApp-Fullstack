@@ -3,7 +3,7 @@ import { Button, Input, Card, Spin, message, Modal, Row, Col, Typography, Tag } 
 import { AptosClient } from "aptos";
 import { useParams } from "react-router-dom";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { MARKET_PLACE_ADDRESS } from "../Constants";
+import { MARKET_PLACE_ADDRESS, MARKET_PLACE_NAME } from "../Constants";
 import { CheckOutlined, EditOutlined, DollarCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import ConfirmPurchaseModal from "../components/ConfirmPurchaseModal";
 import PlaceBidModal from "../components/PlaceBidModal";
@@ -81,7 +81,7 @@ const NFTDetail: React.FC = () => {
     try {
     const entryFunctionPayload = {
             type: "entry_function_payload",
-            function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::end_sale`,
+            function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::end_sale`,
             type_arguments: [],
             arguments: [MARKET_PLACE_ADDRESS, nftDetails.id.toString() ],
           };
@@ -104,7 +104,7 @@ const NFTDetail: React.FC = () => {
 
     try {
       const entryFunctionPayload = {
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::end_auction`,
+        function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::end_auction`,
         type_arguments: [],
         arguments: [MARKET_PLACE_ADDRESS, nftId],
       };

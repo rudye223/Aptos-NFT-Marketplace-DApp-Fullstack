@@ -1,5 +1,5 @@
 address 0x7af8a296ba5095b66fb7283a6e463e1bcb7fbc6e7101071c870a6cd165cb3dd1 {
-  module NFTMarketplace {
+  module NFTMarketplaceV2 {
     use 0x1::signer;
     use 0x1::vector;
     use 0x1::coin;
@@ -52,13 +52,19 @@ address 0x7af8a296ba5095b66fb7283a6e463e1bcb7fbc6e7101071c870a6cd165cb3dd1 {
         highest_bidder: address,
     }
 
+struct SalesVolumeEntry has store, copy, drop {
+    time: u64,     // Timestamp for the time period (e.g., today)
+    volume: u64,   // Total sales volume for that time period
+}
+
     struct Analytics has key, store {
     total_nfts_sold: u64,
     total_trading_volume: u64,
     trending_nfts: vector<u64>,
     active_users: vector<address>,
-    sales_volume_over_time: vector<u64>, // Indexed by time periods (e.g., days)
+    sales_volume_over_time: vector<SalesVolumeEntry>,
 }
+
 
     const MARKETPLACE_FEE_PERCENT: u64 = 2; // 2% fee
 
@@ -81,15 +87,14 @@ public entry fun initialize_analytics(account: &signer) {
         total_trading_volume: 0,
         trending_nfts: vector::empty<u64>(),
         active_users: vector::empty<address>(),
-        sales_volume_over_time: vector::empty<u64>(),
+        sales_volume_over_time: vector::empty<SalesVolumeEntry>(),
     };
     move_to(account, analytics);
 }
 
-
 // View Analytics
 #[view]
-public fun get_analytics(marketplace_addr: address): (u64, u64, vector<u64>, vector<address>, vector<u64>) acquires Analytics {
+public fun get_analytics(marketplace_addr: address): (u64, u64, vector<u64>, vector<address>, vector<SalesVolumeEntry>) acquires Analytics {
     let analytics = borrow_global<Analytics>(marketplace_addr);
     (
         analytics.total_nfts_sold,
@@ -209,6 +214,43 @@ public fun get_analytics(marketplace_addr: address): (u64, u64, vector<u64>, vec
     if (!vector::contains(&analytics.active_users, &user_address)) {
         vector::push_back(&mut analytics.active_users, user_address);
     };
+      
+    // Update sales volume over time (using a daily key).
+    let current_time = timestamp::now_seconds();
+    let day_start_timestamp = current_time - (current_time % 86400);
+
+    let volume_found = false;
+    let entries_len = vector::length(&analytics.sales_volume_over_time);
+    let i = 0;
+
+    while(i < entries_len){
+         let entry = *vector::borrow(&analytics.sales_volume_over_time, i);
+
+          if(entry.time == day_start_timestamp){
+            // Update the existing entry
+             let updated_volume = entry.volume + auction.highest_bid;
+             let updated_entry = SalesVolumeEntry {
+                time: day_start_timestamp,
+                volume: updated_volume,
+             };
+              vector::remove(&mut analytics.sales_volume_over_time, i);
+            vector::push_back(&mut analytics.sales_volume_over_time, updated_entry);
+           
+            volume_found = true;
+            break
+         };
+
+         i = i + 1;
+    };
+
+    if (!volume_found) {
+        // Add a new entry if not found
+         let new_entry = SalesVolumeEntry {
+            time: day_start_timestamp,
+            volume: auction.highest_bid,
+         };
+         vector::push_back(&mut analytics.sales_volume_over_time, new_entry);
+    };
 }
 
 
@@ -297,6 +339,43 @@ public fun get_active_auctions(marketplace_addr: address, limit: u64, offset: u6
     let user_address = signer::address_of(account);
     if (!vector::contains(&analytics.active_users, &user_address)) {
         vector::push_back(&mut analytics.active_users, user_address);
+    };
+     
+// Update sales volume over time 
+      let current_time = timestamp::now_seconds();
+    let day_start_timestamp = current_time - (current_time % 86400);
+
+    let volume_found = false;
+    let entries_len = vector::length(&analytics.sales_volume_over_time);
+    let i = 0;
+
+    while (i < entries_len) {
+        let entry = *vector::borrow(&analytics.sales_volume_over_time, i);
+
+        if (entry.time == day_start_timestamp) {
+            // If an entry exists for the current day, update its volume
+            let updated_volume = entry.volume + payment;
+            let updated_entry = SalesVolumeEntry {
+                time: day_start_timestamp,
+                volume: updated_volume,
+            };
+            vector::remove(&mut analytics.sales_volume_over_time, i);
+            vector::push_back(&mut analytics.sales_volume_over_time, updated_entry);
+
+            volume_found = true;
+            break
+        };
+
+        i = i + 1;
+    };
+
+    if (!volume_found) {
+        // If no entry exists for today, add a new one
+        let new_entry = SalesVolumeEntry {
+            time: day_start_timestamp,
+            volume: payment,
+        };
+        vector::push_back(&mut analytics.sales_volume_over_time, new_entry);
     };
 }
 

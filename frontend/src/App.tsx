@@ -9,7 +9,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MyNFTs from "./pages/MyNFTs";
 import { AptosClient } from "aptos";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { MARKET_PLACE_ADDRESS } from "./Constants";
+import { MARKET_PLACE_ADDRESS, MARKET_PLACE_NAME } from "./Constants";
 import AuctionPage from "./pages/AuctionPage";
 import Transfer from "./pages/Transfer";
 import NFTDetail from "./pages/NFTDetail";
@@ -28,10 +28,10 @@ function App() {
       const nameVector = Array.from(new TextEncoder().encode(values.name));
       const descriptionVector = Array.from(new TextEncoder().encode(values.description));
       const uriVector = Array.from(new TextEncoder().encode(values.uri));
-
+      console.log("rarity::", values.rarity)
       const entryFunctionPayload = {
         type: "entry_function_payload",
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::mint_nft`,
+        function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::mint_nft`,
         type_arguments: [],
         arguments: [nameVector, descriptionVector, uriVector, values.rarity],
       };
@@ -54,7 +54,7 @@ function App() {
         <NavBar onMintNFTClick={handleMintNFTClick} /> {/* Pass handleMintNFTClick to NavBar */}
 
         <Routes>
-          <Route path="/" element={<MarketView marketplaceAddr={MARKET_PLACE_ADDRESS} />} />
+          <Route path="/" element={<MarketView  />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/my-nfts" element={<MyNFTs />} />
           <Route path="/auctions" element={<AuctionPage />} />

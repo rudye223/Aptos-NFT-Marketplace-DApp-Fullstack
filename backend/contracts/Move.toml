@@ -1,5 +1,5 @@
 [package]
-name = "NFTMarketplace"
+name = "NFTMarketplaceV2"
 version = "0.1.0"
 
 [addresses]

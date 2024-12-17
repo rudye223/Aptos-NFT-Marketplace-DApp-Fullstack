@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Modal, Input, Button, message } from "antd";
 import { AptosClient } from "aptos";
-import { MARKET_PLACE_ADDRESS } from "../Constants";
+import { MARKET_PLACE_ADDRESS, MARKET_PLACE_NAME } from "../Constants";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
@@ -34,7 +34,7 @@ const PlaceBidModal: React.FC<PlaceBidModalProps> = ({ isVisible, onClose, nftDe
      const bidInOctas = BigInt(Math.ceil(parseFloat(bidAmount) * precision));
       const entryFunctionPayload = {
         type: "entry_function_payload",
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::place_bid`,
+        function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::place_bid`,
         type_arguments: [],
         arguments: [MARKET_PLACE_ADDRESS, nftDetails.id.toString(), bidInOctas.toString()],
       };

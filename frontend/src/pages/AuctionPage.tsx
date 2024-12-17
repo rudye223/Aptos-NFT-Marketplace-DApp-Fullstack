@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Typography, Card, Row, Col, Button, Pagination, message, Modal, Input, Form, Spin } from "antd";
 import { AptosClient } from "aptos";
-import { MARKET_PLACE_ADDRESS } from "../Constants";
+import { MARKET_PLACE_ADDRESS, MARKET_PLACE_NAME } from "../Constants";
 import Meta from "antd/es/card/Meta";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 const { Title } = Typography;
@@ -28,7 +28,7 @@ const AuctionsPage = () => {
   const fetchNFTDetails = async (id: number) => {
     try {
       const nftDetails = await client.view({
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::get_nft_details_current`,
+        function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::get_nft_details_current`,
         arguments: [MARKET_PLACE_ADDRESS, id],
         type_arguments: [],
       });
@@ -76,7 +76,7 @@ const AuctionsPage = () => {
       const limit = pageSize.toString();
 
       const auctionDataResponse = await client.view({
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::get_active_auctions`,
+        function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::get_active_auctions`,
         arguments: [MARKET_PLACE_ADDRESS, limit, offset],
         type_arguments: [],
       });
@@ -138,7 +138,7 @@ const AuctionsPage = () => {
 
     try {
       const entryFunctionPayload = {
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::end_auction`,
+        function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::end_auction`,
         type_arguments: [],
         arguments: [MARKET_PLACE_ADDRESS, nftId],
       };

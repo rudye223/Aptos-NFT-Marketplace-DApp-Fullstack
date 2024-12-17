@@ -1,7 +1,7 @@
 import React from "react";
 import { Modal, Button, message } from "antd";
 import { AptosClient } from "aptos";
-import { MARKET_PLACE_ADDRESS } from "../Constants";
+import { MARKET_PLACE_ADDRESS, MARKET_PLACE_NAME } from "../Constants";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
@@ -28,7 +28,7 @@ const ConfirmPurchaseModal: React.FC<ConfirmPurchaseModalProps> = ({ isVisible, 
        
         const entryFunctionPayload = {
           type: "entry_function_payload",
-          function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::purchase_nft`,
+          function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::purchase_nft`,
           type_arguments: [],
           arguments: [MARKET_PLACE_ADDRESS, nftDetails.id.toString(), priceInOctas.toString()],
         };

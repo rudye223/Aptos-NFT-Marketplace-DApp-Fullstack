@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Modal, Input, Button, message } from "antd";
 import { AptosClient } from "aptos";
-import { MARKET_PLACE_ADDRESS } from "../Constants";
+import { MARKET_PLACE_ADDRESS, MARKET_PLACE_NAME } from "../Constants";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
@@ -30,7 +30,7 @@ const ListForSaleModal: React.FC<ListForSaleModalProps> = ({ isVisible, onClose,
      const priceInOctas = BigInt(Math.ceil(parseFloat(salePrice) * precision));
       const entryFunctionPayload = {
         type: "entry_function_payload",
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::list_for_sale`,
+        function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::list_for_sale`,
         type_arguments: [],
         arguments: [MARKET_PLACE_ADDRESS, nftDetails.id.toString(), priceInOctas.toString()],
       };

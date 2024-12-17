@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button, Input, Select, message } from "antd";
 import { AptosClient } from "aptos";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { MARKET_PLACE_ADDRESS } from "../Constants";
+import { MARKET_PLACE_ADDRESS, MARKET_PLACE_NAME } from "../Constants";
 
 const { Option } = Select;
 
@@ -41,7 +41,7 @@ const Transfer = () => {
       // Construct payload for APT transfer
       const entryFunctionPayload = {
         type: "entry_function_payload",
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::transfer_apt`,
+        function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::transfer_apt`,
         arguments: [recipient, octasAmount.toString()],
         type_arguments: [],
       };

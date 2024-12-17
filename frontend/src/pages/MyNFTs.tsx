@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Typography, Card, Row, Col, Pagination, message, Button, Input, Modal, Tag, Spin } from "antd";
 import { AptosClient } from "aptos";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { MARKET_PLACE_ADDRESS } from "../Constants";
+import { MARKET_PLACE_ADDRESS, MARKET_PLACE_NAME } from "../Constants";
 const { Title } = Typography;
 const { Meta } = Card;
 import { useNavigate } from "react-router-dom";
@@ -40,7 +40,7 @@ const MyNFTs: React.FC = () => {
       console.log("Fetching NFT IDs for owner:", account.address);
 
       const nftIdsResponse = await client.view({
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::get_all_nfts_for_owner`,
+        function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::get_all_nfts_for_owner`,
         arguments: [MARKET_PLACE_ADDRESS, account.address, "100", "0"],
         type_arguments: [],
       });

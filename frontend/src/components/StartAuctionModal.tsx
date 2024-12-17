@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Modal, Input, Button, message, DatePicker } from "antd";
 import { AptosClient } from "aptos";
-import { MARKET_PLACE_ADDRESS } from "../Constants";
+import { MARKET_PLACE_ADDRESS, MARKET_PLACE_NAME } from "../Constants";
 import dayjs, { Dayjs } from "dayjs";  // Use dayjs instead of moment
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
@@ -53,7 +53,7 @@ const StartAuctionModal: React.FC<StartAuctionModalProps> = ({
 
       const entryFunctionPayload = {
         type: "entry_function_payload",
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::start_auction`,
+        function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::start_auction`,
         type_arguments: [],
         arguments: [ 
           MARKET_PLACE_ADDRESS,

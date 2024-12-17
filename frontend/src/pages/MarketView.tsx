@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Typography, Radio, message, Card, Row, Col, Pagination, Tag, Button, Modal, Spin } from "antd";
 import { AptosClient } from "aptos";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { MARKET_PLACE_ADDRESS } from "../Constants";
+import { MARKET_PLACE_ADDRESS, MARKET_PLACE_NAME } from "../Constants";
 import { useNavigate } from "react-router-dom";
 import ConfirmPurchaseModal from "../components/ConfirmPurchaseModal";
 import { rarityColors, rarityLabels } from "../utils/rarityUtils";  
@@ -24,16 +24,14 @@ type NFT = {
   auction: any;  // Include auction data structure
 };
 
-interface MarketViewProps {
-  marketplaceAddr: string;
-}
+ 
 
  
 const truncateAddress = (address: string, start = 6, end = 4) => {
   return `${address.slice(0, start)}...${address.slice(-end)}`;
 };
 
-const MarketView: React.FC<MarketViewProps> = ({ marketplaceAddr }) => {
+const MarketView: React.FC  = ( ) => {
     const { account } = useWallet();
    const [loading, setLoading] = useState<boolean>(true);
   const [nfts, setNfts] = useState<NFT[]>([]);
@@ -53,8 +51,8 @@ const navigate= useNavigate()
       if(!selectedRarity) setLoading(true);
      
         const response = await client.getAccountResource(
-            marketplaceAddr,
-            `${MARKET_PLACE_ADDRESS}::NFTMarketplace::Marketplace`
+            MARKET_PLACE_ADDRESS,
+            `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::Marketplace`
         );
         console.log("Result::", response);
         const nftList = (response.data as { nfts: NFT[] }).nfts;
