@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Typography, Card, Row, Col, Button, Pagination, message, Modal, Input, Form } from "antd";
+import { Typography, Card, Row, Col, Button, Pagination, message, Modal, Input, Form, Spin } from "antd";
 import { AptosClient } from "aptos";
 import { MARKET_PLACE_ADDRESS } from "../Constants";
 import Meta from "antd/es/card/Meta";
@@ -7,6 +7,7 @@ import { useWallet } from "@aptos-labs/wallet-adapter-react";
 const { Title } = Typography;
 import { useNavigate } from "react-router-dom";
 import PlaceBidModal from "../components/PlaceBidModal";
+import { rarityLabels } from "../utils/rarityUtils";
 
 type Auction = {
   id: number;
@@ -33,6 +34,7 @@ const AuctionsPage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedAuction, setSelectedAuction] = useState<Auction | null>(null);
   const [isBidModalVisible, setIsBidModalVisible] = useState(false);
+    const [loading, setLoading] = useState<boolean>(true);
   
   const navigate = useNavigate();
   const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
@@ -83,6 +85,7 @@ const AuctionsPage = () => {
   };
   const fetchAuctions = useCallback(async () => {
     try {
+      setLoading(true);
       const offset = ((currentPage - 1) * pageSize).toString();
       const limit = pageSize.toString();
 
@@ -129,6 +132,8 @@ const AuctionsPage = () => {
     } catch (error) {
       console.error("Error fetching auctions:", error);
       message.error("Failed to fetch auctions.");
+    }finally {
+      setLoading(false);
     }
   }, [currentPage, account]);
 
@@ -163,6 +168,14 @@ const AuctionsPage = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <Spin size="large" />
+
+      </div>
+    );
+  }
   return (
     <div  style={{
       textAlign: "center",
@@ -171,21 +184,21 @@ const AuctionsPage = () => {
       alignItems: "center",
     }}>
       <Title level={2} style={{ marginBottom: "20px", textAlign: "center" }}>Ongoing Auctions</Title>
-      <Row   gutter={[24, 24]}
+      <Row     gutter={[24, 24]}
         style={{
           marginTop: 20,
           width: "100%",
+          maxWidth: "100%",
           display: "flex",
           justifyContent: "center",
           flexWrap: "wrap",
         }}>
         {auctions.map((auction) => (
           <Col   key={auction.id}
-          xs={24} sm={12} md={8} lg={6} xl={6}
+          xs={24} sm={12} md={8} lg={8} xl={6}
           style={{
             display: "flex",
             justifyContent: "center",
-            alignItems: "center",
           }}>
             <Card
               hoverable
@@ -226,7 +239,7 @@ const AuctionsPage = () => {
                 <hr />
                 <h4>{auction.nftMetadata.name}</h4>
                 <p>{auction.nftMetadata.description}</p>
-                <p>Rarity: {auction.nftMetadata.rarity}</p>
+                <p>Rarity: {rarityLabels[auction.nftMetadata.rarity]}</p>
               </div>
             </Card>
           </Col>

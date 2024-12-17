@@ -142,7 +142,6 @@ if (loading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
         <Spin size="large" />
-        <Title level={4} style={{ marginBottom: "20px", textAlign:"center" }}>NFT Details</Title>
 
       </div>
     );

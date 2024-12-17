@@ -5,7 +5,7 @@ import "@aptos-labs/wallet-adapter-ant-design/dist/index.css";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { AptosClient } from "aptos";
 import { AccountBookOutlined, DownOutlined, LogoutOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const { Header } = Layout;
 const { Text } = Typography;
@@ -17,8 +17,15 @@ interface NavBarProps {
 }
 
 const NavBar: React.FC<NavBarProps> = ({ onMintNFTClick }) => {
-  const { connected, account, network, disconnect } = useWallet(); // Add disconnect here
+  const { connected, account, network, disconnect } = useWallet();
   const [balance, setBalance] = useState<number | null>(null);
+  const location = useLocation(); // Get current route path
+  const [selectedKey, setSelectedKey] = useState<string>("/"); // Default key
+
+  useEffect(() => {
+    // Update the selected key based on the current pathname
+    setSelectedKey(location.pathname);
+  }, [location.pathname]);
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -47,8 +54,8 @@ const NavBar: React.FC<NavBarProps> = ({ onMintNFTClick }) => {
 
   const handleLogout = async () => {
     try {
-      await disconnect(); // Disconnect the wallet
-      setBalance(null); // Clear balance on logout
+      await disconnect();
+      setBalance(null);
       message.success("Disconnected from wallet");
     } catch (error) {
       console.error("Error disconnecting wallet:", error);
@@ -68,28 +75,33 @@ const NavBar: React.FC<NavBarProps> = ({ onMintNFTClick }) => {
     >
       <div style={{ display: "flex", alignItems: "center" }}>
         <img src="/Aptos_Primary_WHT.png" alt="Aptos Logo" style={{ height: "30px", marginRight: 16 }} />
-        <Menu theme="dark" mode="horizontal" defaultSelectedKeys={["marketplace"]} style={{ backgroundColor: "#001529" }}>
-          <Menu.Item key="marketplace">
+        <Menu
+          theme="dark"
+          mode="horizontal"
+          selectedKeys={[selectedKey]} // Dynamically set the selected key
+          style={{ backgroundColor: "#001529" }}
+        >
+          <Menu.Item key="/">
             <Link to="/" style={{ color: "#fff" }}>Marketplace</Link>
           </Menu.Item>
-          <Menu.Item key="analytics">
+          <Menu.Item key="/analytics">
             <Link to="/analytics" style={{ color: "#fff" }}>Analytics</Link>
           </Menu.Item>
-          <Menu.Item key="my-collection">
+          <Menu.Item key="/my-nfts">
             <Link to="/my-nfts" style={{ color: "#fff" }}>My Collection</Link>
           </Menu.Item>
-          <Menu.Item key="auction">
-            <Link to="/auctions" style={{ color: "#fff" }}>Auctions</Link>  
+          <Menu.Item key="/auctions">
+            <Link to="/auctions" style={{ color: "#fff" }}>Auctions</Link>
           </Menu.Item>
-          <Menu.Item key="transfer">
-            <Link to="/transfer" style={{ color: "#fff" }}>Transfer</Link>  
+          <Menu.Item key="/transfer">
+            <Link to="/transfer" style={{ color: "#fff" }}>Transfer</Link>
           </Menu.Item>
-          <Menu.Item key="mint-nft" onClick={onMintNFTClick}>
+          <Menu.Item key="/mint-nft" onClick={onMintNFTClick}>
             <span style={{ color: "#fff" }}>Mint NFT</span>
           </Menu.Item>
         </Menu>
       </div>
-  
+
       <Space style={{ alignItems: "center" }}>
         {connected && account ? (
           <Dropdown
@@ -111,7 +123,7 @@ const NavBar: React.FC<NavBarProps> = ({ onMintNFTClick }) => {
                 </Menu.Item>
               </Menu>
             }
-            trigger={['click']}
+            trigger={["click"]}
           >
             <Button type="primary">
               Connected <DownOutlined />
