@@ -5,6 +5,7 @@ import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { MARKET_PLACE_ADDRESS } from "../Constants";
 import { useNavigate } from "react-router-dom";
 import ConfirmPurchaseModal from "../components/ConfirmPurchaseModal";
+import Analytics from "../components/Analytics";
 
 const { Title } = Typography;
 const { Meta } = Card;
@@ -128,7 +129,7 @@ const navigate= useNavigate()
   return (
     <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
       <Title level={2} style={{ marginBottom: "20px" }}>Marketplace</Title>
-
+ 
       {/* Filter Buttons */}
       <div style={{ marginBottom: "20px" }}>
         <Radio.Group
