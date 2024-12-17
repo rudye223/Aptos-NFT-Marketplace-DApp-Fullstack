@@ -50,7 +50,8 @@ const navigate= useNavigate()
 
   const handleFetchNfts = async (selectedRarity: number | undefined) => {
     try {
-      setLoading(true);
+      if(!selectedRarity) setLoading(true);
+     
         const response = await client.getAccountResource(
             marketplaceAddr,
             `${MARKET_PLACE_ADDRESS}::NFTMarketplace::Marketplace`
@@ -118,9 +119,33 @@ const navigate= useNavigate()
   const paginatedNfts = nfts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   if (loading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+      <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        height: "100vh",
+      }}
+    >
+      {/* Title at the top */}
+      <div  >
+        <Title level={2}>Marketplace</Title>
+      </div>
+    
+      {/* Centered spinner */}
+      <div
+        style={{
+          flex: 1,  
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <Spin size="large" />
       </div>
+    </div>
+    
+    
     );
   }
   return (
