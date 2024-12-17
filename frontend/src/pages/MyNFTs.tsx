@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Typography, Card, Row, Col, Pagination, message, Button, Input, Modal, Tag } from "antd";
+import { Typography, Card, Row, Col, Pagination, message, Button, Input, Modal, Tag, Spin } from "antd";
 import { AptosClient } from "aptos";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { MARKET_PLACE_ADDRESS } from "../Constants";
@@ -33,6 +33,8 @@ const truncateAddress = (address: string, start = 6, end = 4) => {
 };
 const MyNFTs: React.FC = () => {
   const pageSize = 8;
+     const [loading, setLoading] = useState<boolean>(true);
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [nfts, setNfts] = useState<NFT[]>([]);
   const [totalNFTs, setTotalNFTs] = useState(0);
@@ -47,6 +49,7 @@ const MyNFTs: React.FC = () => {
     if (!account) return;
 
     try {
+      setLoading(true);
       console.log("Fetching NFT IDs for owner:", account.address);
 
       const nftIdsResponse = await client.view({
@@ -77,6 +80,8 @@ const MyNFTs: React.FC = () => {
     } catch (error) {
       console.error("Error fetching NFTs:", error);
       message.error("Failed to fetch your NFTs.");
+    }finally {
+      setLoading(false);
     }
   }, [account, MARKET_PLACE_ADDRESS]);
 
@@ -105,7 +110,13 @@ const MyNFTs: React.FC = () => {
     setSelectedNft(null);
   };
   const paginatedNFTs = nfts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
+  if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
   return (
     <div
       style={{
@@ -180,7 +191,18 @@ const MyNFTs: React.FC = () => {
               <Meta 
               title={nft.name} description={`Price: ${nft.price} APT`} />
               <p>ID: {nft.id}</p>
-              <p>{nft.description}</p>
+              <div
+        style={{
+          flexGrow: 1,  
+          overflow: "hidden",  
+          textOverflow: "ellipsis", 
+          WebkitLineClamp: 2,  
+          WebkitBoxOrient: "vertical", 
+          display: "-webkit-box",
+        }}
+      >
+        {nft.description}
+      </div>
               <p>Owner: {truncateAddress(nft.owner)}</p>
               {nft.auction ?(
                   <p style={{ margin: "10px 0" }}>For Sale: Auction</p>

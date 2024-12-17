@@ -34,7 +34,7 @@ const NFTDetail: React.FC = () => {
   const { tokenId } = useParams<{ tokenId: string }>();
   const [nftDetails, setNftDetails] = useState<any>(null);
   const [auctionData, setAuctionData] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   
   const { account } = useWallet();
   const [isListModalVisible, setIsListModalVisible] = useState(false);
@@ -74,7 +74,9 @@ const NFTDetail: React.FC = () => {
   }, [auctionData]);
 
   const fetchNFTData = async () => {
+
     if(!tokenId) return;
+    if(!account) return;
     setLoading(true);
     const data = await fetchNFTDataUtil(tokenId, account?.address, client);
     if (data) {
@@ -136,12 +138,19 @@ const NFTDetail: React.FC = () => {
     setIsBuyModalVisible(true);
   };
 
-  if (loading) {
-    return <Spin size="large" />;
+if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <Spin size="large" />
+        <Title level={4} style={{ marginBottom: "20px", textAlign:"center" }}>NFT Details</Title>
+
+      </div>
+    );
   }
 
   return (
-    <div style={{ padding: '20px', display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ padding: '20px', display: "flex", flexDirection:"column", alignItems: "center", justifyContent: "center" }}>
+       <Title level={4} style={{ marginBottom: "20px", textAlign:"center" }}>NFT Details</Title>
       {nftDetails && (
         <Card
           title={<Title level={3}>{nftDetails.name}</Title>}

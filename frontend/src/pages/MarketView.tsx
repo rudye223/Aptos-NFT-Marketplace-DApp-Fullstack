@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Typography, Radio, message, Card, Row, Col, Pagination, Tag, Button, Modal } from "antd";
+import { Typography, Radio, message, Card, Row, Col, Pagination, Tag, Button, Modal, Spin } from "antd";
 import { AptosClient } from "aptos";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { MARKET_PLACE_ADDRESS } from "../Constants";
@@ -34,7 +34,8 @@ const truncateAddress = (address: string, start = 6, end = 4) => {
 };
 
 const MarketView: React.FC<MarketViewProps> = ({ marketplaceAddr }) => {
-  
+    const { account } = useWallet();
+   const [loading, setLoading] = useState<boolean>(true);
   const [nfts, setNfts] = useState<NFT[]>([]);
   const [rarity, setRarity] = useState<'all' | number>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -49,6 +50,7 @@ const navigate= useNavigate()
 
   const handleFetchNfts = async (selectedRarity: number | undefined) => {
     try {
+      setLoading(true);
         const response = await client.getAccountResource(
             marketplaceAddr,
             `${MARKET_PLACE_ADDRESS}::NFTMarketplace::Marketplace`
@@ -101,6 +103,8 @@ const navigate= useNavigate()
     } catch (error) {
         console.error("Error fetching NFTs by rarity:", error);
         message.error("Failed to fetch NFTs.");
+    }finally {
+      setLoading(false);
     }
   };
 
@@ -112,7 +116,13 @@ const navigate= useNavigate()
  
  
   const paginatedNfts = nfts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
+  if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
   return (
     <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
       <Title level={2} style={{ marginBottom: "20px" }}>Marketplace</Title>
@@ -154,7 +164,7 @@ const navigate= useNavigate()
             style={{
               display: "flex",
               justifyContent: "center", // Center the single card horizontally
-              alignItems: "center", // Center content in both directions
+             
             }}
           >
             <Card
@@ -173,22 +183,50 @@ const navigate= useNavigate()
               cover={<img alt={nft.name} src={nft.uri} />}
               actions={[
                 nft.auction ? (
-                  <Button type="link"  onClick={() => navigate(`/nft-detail/${nft.id}`)}>
+                  <Button 
+                    type="link"  
+                    onClick={() => navigate(`/nft-detail/${nft.id}`)}
+                  >
                     Ongoing Auction
                   </Button>
                 ) : (
-                  <Button type="link" onClick={() => handleBuyClick(nft)}>
-                    Buy
-                  </Button>
+                  nft.owner === account?.address ? (
+                    <Button 
+                      type="link" 
+                      onClick={() => navigate(`/nft-detail/${nft.id}`)}
+                    >
+                      End Sale
+                    </Button>
+                  ) : (
+                    <Button 
+                      type="link" 
+                      onClick={() => handleBuyClick(nft)}
+                    >
+                      Buy
+                    </Button>
+                  )
                 ),
               ]}
+              
+              
             >
               <div
                 onClick={() => navigate(`/nft-detail/${nft.id}`)}
                 >
            
               <Meta title={nft.name} description={`Price: ${nft.price} APT`} />
-              <p>{nft.description}</p>
+              <div
+        style={{
+          flexGrow: 1, // Allow description to take available space
+          overflow: "hidden", // Hide overflow
+          textOverflow: "ellipsis", // Truncate text with ellipsis
+          WebkitLineClamp: 2, // Limit description to 2 lines
+          WebkitBoxOrient: "vertical", // Ensure truncation works
+          display: "-webkit-box",
+        }}
+      >
+        {nft.description}
+      </div>
               <p>ID: {nft.id}</p>
               <p>Owner: {truncateAddress(nft.owner)}</p>
               </div>
