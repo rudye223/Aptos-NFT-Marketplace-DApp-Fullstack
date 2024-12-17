@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Typography, Card, Row, Col, Pagination, message, Button, Input, Modal } from "antd";
+import { Typography, Card, Row, Col, Pagination, message, Button, Input, Modal, Tag } from "antd";
 import { AptosClient } from "aptos";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { MARKET_PLACE_ADDRESS } from "../Constants";
@@ -8,6 +8,8 @@ const { Meta } = Card;
 import { useNavigate } from "react-router-dom";
 import StartAuctionModal from "../components/StartAuctionModal";
 import ListForSaleModal from "../components/ListForSaleModal";
+import { fetchNFTDataUtil } from "../utils/fetchNFTData";  
+import { rarityColors, rarityLabels } from "../utils/rarityUtils";  
 
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
 
@@ -19,13 +21,16 @@ type NFT = {
   rarity: number;
   price: number;
   for_sale: boolean;
+  owner: string;
   auction: { 
     starting_bid: number; 
     duration: number; 
     end_time: number;
   } | null;
 };
-
+const truncateAddress = (address: string, start = 6, end = 4) => {
+  return `${address.slice(0, start)}...${address.slice(-end)}`;
+};
 const MyNFTs: React.FC = () => {
   const pageSize = 8;
   const [currentPage, setCurrentPage] = useState(1);
@@ -63,52 +68,7 @@ const MyNFTs: React.FC = () => {
 
       const userNFTs = (await Promise.all(
         nftIds.map(async (id) => {
-          try {
-            const nftDetails = await client.view({
-              function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::get_nft_details_current`,
-              arguments: [MARKET_PLACE_ADDRESS, id],
-              type_arguments: [],
-            });
-            console.log("raw::", nftDetails)
-            const auc= nftDetails[8]
-            const auc_2=  auc['vec']
-             const auction = auc_2[0] 
-             console.log("auction", auction )
-            
-            const [nftId, owner, name, description, uri, price, forSale, rarity ] = nftDetails as [
-              number,
-              string,
-              string,
-              string,
-              string,
-              number,
-              boolean,
-              number,
-              
-            ];
-
-            const hexToUint8Array = (hexString: string): Uint8Array => {
-              const bytes = new Uint8Array(hexString.length / 2);
-              for (let i = 0; i < hexString.length; i += 2) {
-                bytes[i / 2] = parseInt(hexString.substr(i, 2), 16);
-              }
-              return bytes;
-            };
-
-            return {
-              id: nftId,
-              name: new TextDecoder().decode(hexToUint8Array(name.slice(2))),
-              description: new TextDecoder().decode(hexToUint8Array(description.slice(2))),
-              uri: new TextDecoder().decode(hexToUint8Array(uri.slice(2))),
-              rarity,
-              price: price / 100000000, // Convert octas to APT
-              for_sale: forSale,
-              auction:auction,
-            };
-          } catch (error) {
-            console.error(`Error fetching details for NFT ID ${id}:`, error);
-            return null;
-          }
+         return await fetchNFTDataUtil(id, account.address, client);
         })
       )).filter((nft): nft is NFT => nft !== null);
 
@@ -187,7 +147,12 @@ const MyNFTs: React.FC = () => {
                 minWidth: "220px",
                 margin: "0 auto",
               }}
-             
+              extra={<Tag
+                color={rarityColors[nft.rarity]}
+                style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "10px" }}
+              >
+                {rarityLabels[nft.rarity]}
+              </Tag>}
               cover={<img alt={nft.name} src={nft.uri} />}
               actions={[
                 nft.auction ? (
@@ -213,9 +178,10 @@ const MyNFTs: React.FC = () => {
             >
               <div onClick={() => navigate(`/nft-detail/${nft.id}`)}>
               <Meta 
-              title={nft.name} description={`Rarity: ${nft.rarity}, Price: ${nft.price} APT`} />
+              title={nft.name} description={`Price: ${nft.price} APT`} />
               <p>ID: {nft.id}</p>
               <p>{nft.description}</p>
+              <p>Owner: {truncateAddress(nft.owner)}</p>
               {nft.auction ?(
                   <p style={{ margin: "10px 0" }}>For Sale: Auction</p>
               ):(

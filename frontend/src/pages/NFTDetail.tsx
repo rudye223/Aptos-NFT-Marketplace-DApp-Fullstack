@@ -9,22 +9,26 @@ import ConfirmPurchaseModal from "../components/ConfirmPurchaseModal";
 import PlaceBidModal from "../components/PlaceBidModal";
 import StartAuctionModal from "../components/StartAuctionModal";
 import ListForSaleModal from "../components/ListForSaleModal";
+import { fetchNFTDataUtil } from "../utils/fetchNFTData";  
+import { rarityColors, rarityLabels } from "../utils/rarityUtils";  
+
+const MyNFTs: React.FC = () => {
+  // Now you can use rarityColors and rarityLabels
+  const nftRarity = 3; // Just an example
+  const color = rarityColors[nftRarity];
+  const label = rarityLabels[nftRarity];
+
+  return (
+    <div style={{ color }}>
+      <h2>{label}</h2>
+      {/* Render other NFT details */}
+    </div>
+  );
+};
 
 const { Title, Paragraph, Text } = Typography;
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
-const rarityColors: { [key: number]: string } = {
-  1: "green",
-  2: "blue",
-  3: "purple",
-  4: "orange",
-};
-
-const rarityLabels: { [key: number]: string } = {
-  1: "Common",
-  2: "Uncommon",
-  3: "Rare",
-  4: "Super Rare",
-};
+ 
 
 const NFTDetail: React.FC = () => {
   const { tokenId } = useParams<{ tokenId: string }>();
@@ -70,72 +74,16 @@ const NFTDetail: React.FC = () => {
   }, [auctionData]);
 
   const fetchNFTData = async () => {
-    if (!tokenId && !account) return;
-
+    if(!tokenId) return;
     setLoading(true);
-
-    try {
-      const nftDetails = await client.view({
-        function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::get_nft_details_current`,
-        arguments: [MARKET_PLACE_ADDRESS, tokenId],
-        type_arguments: [],
-      });
-
-      const auc = nftDetails[8];
-      const auc_2 = auc['vec'];
-      const auction = auc_2[0];
-
-      const [nftId, owner, name, description, uri, price, for_sale, rarity] = nftDetails as [
-        number,
-        string,
-        string,
-        string,
-        string,
-        number,
-        boolean,
-        number
-      ];
-
-      const hexToUint8Array = (hexString: string): Uint8Array => {
-        const bytes = new Uint8Array(hexString.length / 2);
-        for (let i = 0; i < hexString.length; i += 2) {
-          bytes[i / 2] = parseInt(hexString.substr(i, 2), 16);
-        }
-        return bytes;
-      };
-      const nft = {
-        id: nftId,
-        name: new TextDecoder().decode(hexToUint8Array(name.slice(2))),
-        description: new TextDecoder().decode(hexToUint8Array(description.slice(2))),
-        uri: new TextDecoder().decode(hexToUint8Array(uri.slice(2))),
-        rarity,
-        price: price / 100000000, // Convert octas to APT
-        for_sale,
-        owner,
-        auction
-      }
-      console.log("nft::", nft)
-      setNftDetails(nft);
-      try {
-        const auction_data = {
-          end_time: auction.end_time,
-          highest_bid: auction.highest_bid / 100000000, // Convert octas to APT,
-          highest_bidder: auction.highest_bidder,
-          nft_id: auction.nft_id,
-          starting_price: auction.starting_price / 100000000, // Convert octas to APT
-        }
-        console.log("auction::", auction_data)
-        setAuctionData(auction_data);
-      } catch (error) {
-        console.error(`destructurng error`, error);
-      }
-
-    } catch (error) {
-      console.error(`Error fetching details for NFT ID ${tokenId}:`, error);
+    const data = await fetchNFTDataUtil(tokenId, account?.address, client);
+    if (data) {
+      setNftDetails(data);
+      setAuctionData(data.auction);
+    } else {
       message.error("Error fetching NFT details.");
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
    
   const handleEndSale = async () => {
@@ -215,10 +163,14 @@ const NFTDetail: React.FC = () => {
               <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}><Text strong>Rarity:</Text> {rarityLabels[nftDetails.rarity]}</Paragraph>
               <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}><Text strong>For Sale:</Text> {nftDetails.for_sale ? 'Yes' : 'No'}</Paragraph>
             </Col>
+ 
           </Row>
 
           <Paragraph style={{ marginTop: '20px', fontSize: '16px', lineHeight: 1.5 }}>
             <Text strong >Description:</Text> {nftDetails.description}
+           </Paragraph>
+          <Paragraph style={{ marginTop: '20px', fontSize: '13px', lineHeight: 1.5 }}>
+            <Text strong >Owner:</Text> {nftDetails.owner}
           </Paragraph>
           {auctionData && (
             <div style={{ marginBottom: 20 }}>

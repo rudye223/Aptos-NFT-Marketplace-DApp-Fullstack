@@ -13,6 +13,7 @@ import { MARKET_PLACE_ADDRESS } from "./Constants";
 import AuctionPage from "./pages/AuctionPage";
 import Transfer from "./pages/Transfer";
 import NFTDetail from "./pages/NFTDetail";
+import Analytics from "./pages/Analytics";
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
  
 function App() {
@@ -54,6 +55,7 @@ function App() {
 
         <Routes>
           <Route path="/" element={<MarketView marketplaceAddr={MARKET_PLACE_ADDRESS} />} />
+          <Route path="/analytics" element={<Analytics />} />
           <Route path="/my-nfts" element={<MyNFTs />} />
           <Route path="/auctions" element={<AuctionPage />} />
           <Route path="/transfer" element={<Transfer />} />

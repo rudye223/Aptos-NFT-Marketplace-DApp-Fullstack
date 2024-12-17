@@ -1,5 +1,6 @@
+// src/pages/AnalyticsPage.tsx
 import React, { useState, useEffect } from "react";
-import { Modal, Input, Button, message, Spin, Tooltip, Card } from "antd";
+import { Modal, Button, message, Spin, Card } from "antd";
 import { AptosClient } from "aptos";
 import { MARKET_PLACE_ADDRESS } from "../Constants";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
@@ -8,7 +9,7 @@ const { Meta } = Card;
 
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
 
-const Analytics = () => {
+const Analytics  = () => {
   const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -16,16 +17,24 @@ const Analytics = () => {
 
   useEffect(() => {
     const fetchAnalytics = async () => {
-        console.log("fetching analytics")
       try {
         setLoading(true);
-        const resource = await client.getAccountResource(MARKET_PLACE_ADDRESS, "AnalyticsModule::Analytics");
-console.log("resource::", resource)
-        if (resource && resource.data) {
-          setAnalytics(resource.data);
-        } else {
-          message.error("Analytics data not found.");
-        }
+        const data = await client.view({
+          function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::get_analytics`,
+          arguments: [MARKET_PLACE_ADDRESS],
+          type_arguments: [],
+        });
+
+        // Transform the raw data into a more usable structure
+        const transformedAnalytics = {
+          total_nfts_sold: parseInt(data[0], 10), // Convert to number
+          total_trading_volume: parseInt(data[1], 10), // Convert to number
+          trending_nfts: data[2], // This is already an array of IDs
+          active_users: data[3], // This is an array of addresses
+          sales_volume_over_time: data[4], // This is an empty array for now
+        };
+
+        setAnalytics(transformedAnalytics);
       } catch (error) {
         console.error("Error fetching analytics:", error);
         message.error("Failed to fetch analytics.");
@@ -135,4 +144,4 @@ console.log("resource::", resource)
   );
 };
 
-export default Analytics;
+export default Analytics ;

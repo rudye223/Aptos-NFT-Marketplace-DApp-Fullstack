@@ -5,7 +5,7 @@ import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { MARKET_PLACE_ADDRESS } from "../Constants";
 import { useNavigate } from "react-router-dom";
 import ConfirmPurchaseModal from "../components/ConfirmPurchaseModal";
-import Analytics from "../components/Analytics";
+import { rarityColors, rarityLabels } from "../utils/rarityUtils";  
 
 const { Title } = Typography;
 const { Meta } = Card;
@@ -28,20 +28,7 @@ interface MarketViewProps {
   marketplaceAddr: string;
 }
 
-const rarityColors: { [key: number]: string } = {
-  1: "green",
-  2: "blue",
-  3: "purple",
-  4: "orange",
-};
-
-const rarityLabels: { [key: number]: string } = {
-  1: "Common",
-  2: "Uncommon",
-  3: "Rare",
-  4: "Super Rare",
-};
-
+ 
 const truncateAddress = (address: string, start = 6, end = 4) => {
   return `${address.slice(0, start)}...${address.slice(-end)}`;
 };
@@ -177,6 +164,12 @@ const navigate= useNavigate()
                 maxWidth: "240px", // Limit the card width on larger screens
                 margin: "0 auto",
               }}
+                extra={<Tag
+                          color={rarityColors[nft.rarity]}
+                          style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "10px" }}
+                        >
+                          {rarityLabels[nft.rarity]}
+                        </Tag>}
               cover={<img alt={nft.name} src={nft.uri} />}
               actions={[
                 nft.auction ? (
@@ -193,14 +186,7 @@ const navigate= useNavigate()
               <div
                 onClick={() => navigate(`/nft-detail/${nft.id}`)}
                 >
-              {/* Rarity Tag */}
-              <Tag
-                color={rarityColors[nft.rarity]}
-                style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "10px" }}
-              >
-                {rarityLabels[nft.rarity]}
-              </Tag>
-
+           
               <Meta title={nft.name} description={`Price: ${nft.price} APT`} />
               <p>{nft.description}</p>
               <p>ID: {nft.id}</p>

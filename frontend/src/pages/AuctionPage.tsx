@@ -171,15 +171,27 @@ const AuctionsPage = () => {
       alignItems: "center",
     }}>
       <Title level={2} style={{ marginBottom: "20px", textAlign: "center" }}>Ongoing Auctions</Title>
-      <Row gutter={[24, 24]}>
+      <Row   gutter={[24, 24]}
+        style={{
+          marginTop: 20,
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          flexWrap: "wrap",
+        }}>
         {auctions.map((auction) => (
-          <Col key={auction.id} xs={24} sm={12} md={8} lg={8} xl={6}>
+          <Col   key={auction.id}
+          xs={24} sm={12} md={8} lg={6} xl={6}
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}>
             <Card
               hoverable
               style={{
                 width: "100%",
-                maxWidth: "280px",
-                minWidth: "220px",
+                maxWidth: "240px",
                 margin: "0 auto",
               }}
               actions={[
