@@ -1,5 +1,5 @@
-address  0x7c29f596c48bda131bfef7b2462c71dbf8fa8e201675629a5177d6af4316ff69 {
-module NFTMarketplace {
+address 0x7af8a296ba5095b66fb7283a6e463e1bcb7fbc6e7101071c870a6cd165cb3dd1 {
+    module NFTMarketplace {
     use 0x1::signer;
     use 0x1::vector;
     use 0x1::coin;
@@ -510,7 +510,7 @@ module NFTMarketplace {
 
   // Get NFT Details
     #[view]
-    public fun get_nft_details(
+    public fun get_nft_details_current(
         marketplace_addr: address, 
         nft_id: u64
     ): (u64, address, vector<u8>, vector<u8>, vector<u8>, u64, bool, u8, option::Option<Auction>) acquires Marketplace {
@@ -552,58 +552,38 @@ module NFTMarketplace {
     }
 
 
- 
+// Function to send a message in a chat
+   public entry fun send_message(account: &signer, marketplace_addr: address, recipient: address, content: string::String) acquires ChatStore {
+        let sender = signer::address_of(account);
+        let chat_store = borrow_global_mut<ChatStore>(marketplace_addr);
 
- // Entry function to transfer APT
-    public entry fun transfer_apt(
-        sender: &signer, 
-        recipient: address, 
-        amount: u64
-    )  {
-        // Ensure the transfer amount is positive
-        assert!(amount > 0, E_INVALID_AMOUNT); //   Invalid amount
+        // Check if a chat already exists
+        let chat_entry_option = get_chat_entry(chat_store, sender, recipient);
 
-        // Check if sender has enough APT balance
-        let sender_balance = coin::balance<aptos_coin::AptosCoin>(signer::address_of(sender));
-        assert!(sender_balance >= amount, E_INSUFFICIENT_FUNDS); //  Insufficient funds
+        let chat_ref = if (option::is_some(&chat_entry_option)) {
+            // If the chat exists, borrow a mutable reference to the Chat struct
+            let chat_entry = option::borrow_mut(&mut chat_entry_option);
+           &mut chat_entry.chat
+        } else {
+           // Create a new chat if one doesn't exist
+                let new_chat = Chat {
+                     participants: vector::empty(),
+                     messages: vector::empty(),
+                    deleted: false,
+                  };
+                   vector::push_back(&mut new_chat.participants, sender);
+                   vector::push_back(&mut new_chat.participants, recipient);
+                  let new_entry = ChatEntry{
+                    chat: new_chat
+                  };
+                vector::push_back(&mut chat_store.chats, new_entry);
+                 let last_index = vector::length(&chat_store.chats) - 1;
+                 let last_entry = vector::borrow_mut(&mut chat_store.chats, last_index);
+                  &mut last_entry.chat
 
-        // Proceed with the transfer
-        coin::transfer<aptos_coin::AptosCoin>(sender, recipient, amount);
-    }
-
-   public fun min(a: u64, b: u64): u64 {
-        if (a < b) { a } else { b }
-    }
-    
-
-// Helper function to find the chat by participants
-fun get_chat_entry(chat_store: &mut ChatStore, sender: address, recipient: address): option::Option<ChatEntry> {
-    let chats_len = vector::length(&chat_store.chats);
-    let mut_i = 0;
-
-    while(mut_i < chats_len){
-        let chat_entry = *vector::borrow(&chat_store.chats, mut_i);
-        if(vector::contains(&chat_entry.chat.participants, &sender) && vector::contains(&chat_entry.chat.participants, &recipient)){
-            return option::some(chat_entry)
         };
-        mut_i = mut_i + 1;
-    };
+         let timestamp = timestamp::now_seconds();
 
-    option::none()
-}
-
-public entry fun send_message(account: &signer, marketplace_addr: address, recipient: address, content: string::String) acquires ChatStore {
-    let sender = signer::address_of(account);
-    let chat_store = borrow_global_mut<ChatStore>(marketplace_addr);
-
-    // Check if a chat already exists
-    let chat_index_option = get_chat_entry(chat_store, sender, recipient);
-
-    if (option::is_some(&chat_index_option)) {
-        // Extract the existing ChatEntry from the Option
-        let chat_entry = option::extract(&mut chat_index_option); // Mutably extract the value
-
-        let timestamp = timestamp::now_seconds();
         let message = Message {
             sender,
             content,
@@ -611,37 +591,8 @@ public entry fun send_message(account: &signer, marketplace_addr: address, recip
             deleted: false,
         };
 
-        // Add the message to the existing chat
-        vector::push_back(&mut chat_entry.chat.messages, message);
-    } else {
-        // Create a new chat if one doesn't exist
-        let new_chat = Chat {
-            participants: vector::empty(),
-            messages: vector::empty(),
-            deleted: false,
-        };
-        vector::push_back(&mut new_chat.participants, sender);
-        vector::push_back(&mut new_chat.participants, recipient);
-        let new_entry = ChatEntry {
-            chat: new_chat,
-        };
-        vector::push_back(&mut chat_store.chats, new_entry);
-
-        // Add the first message to the newly created chat
-        let last_index = vector::length(&chat_store.chats) - 1;
-        let chat_entry = vector::borrow_mut(&mut chat_store.chats, last_index);
-
-        let timestamp = timestamp::now_seconds();
-        let message = Message {
-            sender,
-            content,
-            timestamp,
-            deleted: false,
-        };
-        vector::push_back(&mut chat_entry.chat.messages, message);
-    };
-}
-
+        vector::push_back(&mut chat_ref.messages, message);
+    }
 
 
    // Function to delete a message in a chat
@@ -673,7 +624,7 @@ public entry fun send_message(account: &signer, marketplace_addr: address, recip
         });
     }
 
-  // Function to delete a chat
+    // Function to delete a chat
     public entry fun delete_chat(account: &signer, marketplace_addr: address, sender: address, recipient:address) acquires ChatStore {
          let sender_address = signer::address_of(account);
          let chat_store = borrow_global_mut<ChatStore>(marketplace_addr);
@@ -697,35 +648,73 @@ public entry fun send_message(account: &signer, marketplace_addr: address, recip
             deleted_by: sender_address,
         });
     }
-
-
+    
      // Function to fetch all messages in a chat (with pagination)
     public fun get_chat_messages(marketplace_addr: address, sender: address, recipient: address, limit: u64, offset: u64): vector<Message> acquires ChatStore {
-        let chat_store = borrow_global_mut<ChatStore>(marketplace_addr);
+      let chat_store = borrow_global<ChatStore>(marketplace_addr);
         let chat_entry_option = get_chat_entry(chat_store, sender, recipient);
         
-        if (!option::is_some(&chat_entry_option)) {
-            return vector::empty<Message>()
+         let chat_ref = if (option::is_some(&chat_entry_option)) {
+            let chat_entry = option::borrow(&chat_entry_option);
+              &chat_entry.chat
+        } else {
+             abort E_CHAT_DOES_NOT_EXIST
         };
+       
 
-        let chat_entry = option::borrow(&chat_entry_option);
-        let chat_ref = &chat_entry.chat;
-        
+        // Implement pagination (limit and offset)
         let start = offset;
-        let end = min(offset + limit, vector::length<Message>(&chat_ref.messages));
+       let end = min(offset + limit, vector::length<Message>(&chat_ref.messages));
 
-        let valid_messages = vector::empty<Message>();
-         let  i = start;
-        while (i < end) {
-            let msg = *vector::borrow(&chat_ref.messages, i);
-             if (!msg.deleted) {
-                vector::push_back(&mut valid_messages, msg);
-            };
-            i = i + 1;
-        };
-    
+         let paginated_messages = vector::slice(&chat_ref.messages, start, end);
+
+         // Filter out deleted messages
+       let valid_messages = vector::filter<Message>(paginated_messages, |msg: &Message| !msg.deleted);
+
+
         valid_messages
     }
 
+      // Helper function to find the chat by participants
+    fun get_chat_entry(chat_store: &mut ChatStore, sender:address, recipient: address): option::Option<&mut ChatEntry> {
+      let entries_len = vector::length(&chat_store.chats);
+       let mut_i = 0;
+
+         while(mut_i < entries_len) {
+             let chat_entry = vector::borrow_mut(&mut chat_store.chats, mut_i);
+              if(vector::length(&chat_entry.chat.participants) == 2){
+                 if((vector::borrow(&chat_entry.chat.participants, 0) == &sender && vector::borrow(&chat_entry.chat.participants, 1) == &recipient )
+                     || (vector::borrow(&chat_entry.chat.participants, 0) == &recipient && vector::borrow(&chat_entry.chat.participants, 1) == &sender ) ){
+                    return option::some(chat_entry)
+                 }
+
+              };
+           mut_i = mut_i + 1;
+         };
+        return option::none()
+    }
+
+ // Entry function to transfer APT
+    public entry fun transfer_apt(
+        sender: &signer, 
+        recipient: address, 
+        amount: u64
+    )  {
+        // Ensure the transfer amount is positive
+        assert!(amount > 0, E_INVALID_AMOUNT); //   Invalid amount
+
+        // Check if sender has enough APT balance
+        let sender_balance = coin::balance<aptos_coin::AptosCoin>(signer::address_of(sender));
+        assert!(sender_balance >= amount, E_INSUFFICIENT_FUNDS); //  Insufficient funds
+
+        // Proceed with the transfer
+        coin::transfer<aptos_coin::AptosCoin>(sender, recipient, amount);
+    }
+
+   public fun min(a: u64, b: u64): u64 {
+        if (a < b) { a } else { b }
+    }
+
+    
 }
 }
