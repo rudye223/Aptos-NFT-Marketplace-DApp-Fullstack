@@ -166,7 +166,7 @@ if (loading) {
             <Text strong >Description:</Text> {nftDetails.description}
            </Paragraph>
           <Paragraph style={{ marginTop: '20px', fontSize: '13px', lineHeight: 1.5 }}>
-            <Text strong >Owner:</Text> {nftDetails.owner}
+            <Text strong >Owner:</Text> { nftDetails.owner === account?.address && "You | "}{nftDetails.owner}
           </Paragraph>
           {auctionData && (
             <div style={{ marginBottom: 20 }}>

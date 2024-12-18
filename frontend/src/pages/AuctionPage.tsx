@@ -28,7 +28,7 @@ const AuctionsPage = () => {
   const fetchNFTDetails = async (id: number) => {
     try {
       const nftDetails = await client.view({
-        function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::get_nft_details_current`,
+        function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::get_nft_details`,
         arguments: [MARKET_PLACE_ADDRESS, id],
         type_arguments: [],
       });

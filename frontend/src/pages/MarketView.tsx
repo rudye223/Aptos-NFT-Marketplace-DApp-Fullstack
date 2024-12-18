@@ -251,7 +251,7 @@ const navigate= useNavigate()
         {nft.description}
       </div>
               <p>ID: {nft.id}</p>
-              <p>Owner: {truncateAddress(nft.owner)}</p>
+              <p>Owner: { nft.owner === account?.address && "You | "}{truncateAddress(nft.owner)}</p>
               </div>
             </Card>
           </Col>

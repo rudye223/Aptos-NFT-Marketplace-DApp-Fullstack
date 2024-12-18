@@ -8,7 +8,7 @@ export const fetchNFTDataUtil = async (tokenId: string, account: string | undefi
 
   try {
     const nftDetails = await client.view({
-      function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::get_nft_details_current`,
+      function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::get_nft_details`,
       arguments: [MARKET_PLACE_ADDRESS, tokenId],
       type_arguments: [],
     });
