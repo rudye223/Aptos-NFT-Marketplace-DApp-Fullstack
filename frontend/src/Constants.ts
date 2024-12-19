@@ -1,3 +1,3 @@
-export const MARKET_PLACE_ADDRESS="0x7c29f596c48bda131bfef7b2462c71dbf8fa8e201675629a5177d6af4316ff69"
+export const MARKET_PLACE_ADDRESS="0x030f98f35fd60a816447d3a29fb2d171a3665dfbaeff74cfc98dca88ef4e242b"
 export const MARKET_PLACE_NAME="NFTMarketplace"
  

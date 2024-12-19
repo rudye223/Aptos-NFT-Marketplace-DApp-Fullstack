@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
     Button,
     Input,
@@ -22,9 +22,8 @@ const { Text, Title } = Typography;
 
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
 
-
 interface Chat1 {
-    id: string; // Convert to string
+    id: string;
     participants: string[];
     messages: Message1[];
     last_message_id: number;
@@ -37,6 +36,7 @@ interface Message1 {
     timestamp: number;
 }
 
+
 const ChatPage: React.FC = () => {
     const { account } = useWallet();
     const [loading, setLoading] = useState(false);
@@ -46,54 +46,124 @@ const ChatPage: React.FC = () => {
     const [newMessage, setNewMessage] = useState("");
     const [recipientAddress, setRecipientAddress] = useState("");
     const [transactionStatus, setTransactionStatus] = useState<string | null>(null);
+    const messageListRef = useRef<HTMLDivElement>(null);
     const secretKey = process.env.REACT_APP_SECRET_KEY || "default-secret-key";
+    const [isInitialized, setIsInitialized] = useState(false);
+    const [initializationLoading, setInitializationLoading] = useState(false);
+
 
 
     useEffect(() => {
         if (account) {
-            fetchChats();
+            checkUserInitialization();
         }
     }, [account]);
-    const decryptMessage = (encryptedMessage: string): string => {
-      try {
-          const bytes  = CryptoJS.AES.decrypt(encryptedMessage, secretKey);
-        return bytes.toString(CryptoJS.enc.Utf8);
-    } catch (error) {
-        console.error("Error decrypting the message:", error);
-           return encryptedMessage
-     }
- };
 
-   const fetchMessages = useCallback(async (chatId: string) => {
+
+    const checkUserInitialization = async () => {
+        if (!account) return;
+        setLoading(true);
+        try {
+             const response = await client.view({
+                function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::is_user_initialized`,
+                 type_arguments: [],
+                arguments: [account.address],
+            });
+            setIsInitialized(response[0] === true);
+        } catch (error) {
+             console.error("Error checking initialization:", error);
+           message.error("Failed to check user initialization.");
+        } finally {
+           setLoading(false);
+        }
+     };
+
+      const initializeUser = async () => {
+        if (!account) return;
+         setInitializationLoading(true);
+        setTransactionStatus("pending")
+        try {
+             const entryFunctionPayload = {
+                type: "entry_function_payload",
+                function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::initialize_shared_chats`,
+                type_arguments: [],
+                arguments: [],
+             };
+
+            const response = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
+            message.success(`Transaction ${response.hash} submitted`);
+             await client.waitForTransaction(response.hash);
+            message.success("User initialized successfully!");
+            setTransactionStatus("success")
+           setIsInitialized(true);
+
+        } catch (error) {
+           console.error("Failed to initialize user", error);
+             message.error("Failed to initialize user.");
+           setTransactionStatus("error");
+        } finally {
+             setInitializationLoading(false);
+             setTimeout(() => {
+                setTransactionStatus(null);
+            }, 3000);
+        }
+    };
+
+
+
+    useEffect(() => {
+        if (account && isInitialized) {
+             fetchChats();
+        }
+    }, [account, isInitialized]);
+
+
+     const scrollToBottom = () => {
+        if (messageListRef.current) {
+            messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
+        }
+    };
+
+    const decryptMessage = (encryptedMessage: string): string => {
+        try {
+            const bytes = CryptoJS.AES.decrypt(encryptedMessage, secretKey);
+            return bytes.toString(CryptoJS.enc.Utf8);
+        } catch (error) {
+            console.error("Error decrypting the message:", error);
+            return encryptedMessage;
+        }
+    };
+
+    const fetchMessages = useCallback(async (chatId: string) => {
         if (!account) return;
         setLoading(true);
         try {
             const response = await client.view({
-                function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::get_chat_messages_view`,
+                function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::get_chat_messages`,
                 type_arguments: [],
-                 arguments: [account.address, chatId],
+                arguments: [account.address, chatId],
             });
-           console.log("messages::",  response)
-             if (response && response.length > 0 && response[0].length > 0) {
-                 const decryptedMessages = await Promise.all(response[0].map(async(msg: any) => ({
-                      ...msg,
-                      content: decryptMessage(msg.content),
-                   })));
-                setMessages(decryptedMessages as Message1[]);
-            }
+           if (response && response.length > 0 && response[0].length > 0) {
+               const decryptedMessages = await Promise.all(response[0].map(async (msg: any) => ({
+                   ...msg,
+                   content: decryptMessage(msg.content),
+               })));
+              setMessages(decryptedMessages as Message1[]);
+         }
         } catch (error) {
             console.error("Error fetching messages:", error);
             message.error("Failed to fetch messages.");
         } finally {
             setLoading(false);
+            scrollToBottom();
         }
-    }, [client, decryptMessage]);
+    }, [client,   account]);
+
     useEffect(() => {
         if (selectedChat) {
             fetchMessages(selectedChat.id);
         }
-    }, [selectedChat]);
-
+    }, [selectedChat, fetchMessages]);
 
     const fetchChats = async () => {
         if (!account) return;
@@ -104,11 +174,10 @@ const ChatPage: React.FC = () => {
                 type_arguments: [],
                 arguments: [account.address],
             });
-            console.log("response::", response)
-            if (response && response.length > 0 && response[0].length > 0) {
+           if (response && response.length > 0 && response[0].length > 0) {
                 const parsedChats = response[0].map((chat: any) => ({
                     ...chat,
-                    id: chat.id.toString(), // Convert chat.id to string
+                    id: chat.id.toString(),
                 }));
                 setChats(parsedChats as Chat1[]);
             }
@@ -120,9 +189,6 @@ const ChatPage: React.FC = () => {
         }
     };
 
-   
-
-
     const handleCreateChat = async () => {
         if (!account) return;
         if (!recipientAddress) {
@@ -131,23 +197,22 @@ const ChatPage: React.FC = () => {
         }
         setTransactionStatus("pending");
         try {
-            const entryFunctionPayload = {
+             const entryFunctionPayload = {
                 type: "entry_function_payload",
-                function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::create_chat1`,
+                function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::create_chat`,
                 type_arguments: [],
                 arguments: [recipientAddress],
             };
-
             const response = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
             message.success(`Transaction ${response.hash} submitted`);
-            await client.waitForTransaction(response.hash);
+             await client.waitForTransaction(response.hash);
             message.success("Chat Created Successfully");
-            setTransactionStatus("success");
+           setTransactionStatus("success");
             fetchChats();
-            setRecipientAddress("");
+           setRecipientAddress("");
         } catch (error) {
             console.error("Failed to create a chat", error);
-            message.error("Failed to create a chat");
+           message.error("Failed to create a chat");
             setTransactionStatus("error");
         } finally {
             setTimeout(() => {
@@ -161,24 +226,23 @@ const ChatPage: React.FC = () => {
         if (!newMessage) return;
         setTransactionStatus("pending");
         try {
-            const encryptedMessage = encryptMessage(newMessage, secretKey);
+             const encryptedMessage = encryptMessage(newMessage, secretKey);
             const entryFunctionPayload = {
                 type: "entry_function_payload",
-                function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::send_message1`,
+                function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::send_message`,
                 type_arguments: [],
-                arguments: [selectedChat.id, encryptedMessage],
-            };
-
-            const response = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
-            message.success(`Transaction ${response.hash} submitted`);
-            await client.waitForTransaction(response.hash);
-            message.success("Message sent successfully!");
+                 arguments: [selectedChat.id, encryptedMessage],
+             };
+           const response = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
+             message.success(`Transaction ${response.hash} submitted`);
+             await client.waitForTransaction(response.hash);
+             message.success("Message sent successfully!");
             setTransactionStatus("success");
             fetchMessages(selectedChat.id);
             setNewMessage("");
         } catch (error) {
             console.error("Failed to send message.", error);
-            message.error("Failed to send message.");
+           message.error("Failed to send message.");
             setTransactionStatus("error");
         } finally {
             setTimeout(() => {
@@ -186,10 +250,11 @@ const ChatPage: React.FC = () => {
             }, 3000);
         }
     };
-   const encryptMessage = (message: string, secretKey: string): string => {
-           return CryptoJS.AES.encrypt(message, secretKey).toString();
-    };
 
+
+    const encryptMessage = (message: string, secretKey: string): string => {
+        return CryptoJS.AES.encrypt(message, secretKey).toString();
+    };
 
     if (loading) {
         return (
@@ -219,9 +284,15 @@ const ChatPage: React.FC = () => {
             <Title level={3} style={{ marginBottom: "20px", textAlign: "center" }}>
                 Chat
             </Title>
-             {transactionStatus === "pending" && <Spin />}
+            {transactionStatus === "pending" && <Spin />}
             {transactionStatus === "success" && <Text type={"success"}>Success</Text>}
             {transactionStatus === "error" && <Text type={"danger"}>Error</Text>}
+            {!isInitialized ? (
+                 <div style={{textAlign:'center'}}>
+                    <Text>It seems that you have not initialized your chat account. </Text>
+                   <Button type="primary"  onClick={initializeUser} loading={initializationLoading}>Initialize</Button>
+               </div>
+          ) : (
             <Row gutter={[16, 16]} style={{ width: "100%", maxWidth: "800px" }}>
                 <Col span={8}>
                     <Card title="Chats" style={{ height: "100%", overflowY: "auto" }}>
@@ -239,16 +310,16 @@ const ChatPage: React.FC = () => {
                                             selectedChat?.id === chat.id ? "#f0f0f0" : "white",
                                     }}
                                 >
-                                     <List.Item.Meta
-                                        avatar={<Avatar icon={<MessageOutlined />} />}
-                                        title={
-                                             <Text>
+                                    <List.Item.Meta
+                                       avatar={<Avatar icon={<MessageOutlined />} />}
+                                       title={
+                                           <Text>
                                                {chat.participants.find(
-                                                    (p) => p !== account?.address
-                                                 ) || "New Chat"}
-                                               </Text>
-                                           }
-                                        />
+                                                   (p) => p !== account?.address
+                                               ) || "New Chat"}
+                                            </Text>
+                                        }
+                                    />
                                 </List.Item>
                             )}
                         />
@@ -272,23 +343,23 @@ const ChatPage: React.FC = () => {
                     <Card title={selectedChat ? "Chat Messages" : "Select a chat"} style={{ height: "100%", overflowY: "auto" }}>
                         {selectedChat ? (
                             <>
+                                <div  ref={messageListRef} style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
                                 <List
                                     itemLayout="vertical"
                                     dataSource={messages}
-                                   renderItem={(messageItem) => (
-                                            <List.Item
-                                              >
-                                              <List.Item.Meta
-                                                    avatar={<Avatar>{messageItem.sender === account?.address ? "You" : messageItem.sender.slice(0, 8)}</Avatar>}
-                                                    description={
-                                                          <Text type="secondary">{new Date(messageItem.timestamp * 1000).toLocaleString()}</Text>
-                                                     }
-                                               />
-                                                <Text>{messageItem.content}</Text>
-                                           </List.Item>
-                                       )}
+                                    renderItem={(messageItem) => (
+                                        <List.Item>
+                                            <List.Item.Meta
+                                                  avatar={<Avatar>{messageItem.sender === account?.address ? "You" : messageItem.sender.slice(0, 8)}</Avatar>}
+                                                  description={
+                                                      <Text type="secondary">{new Date(messageItem.timestamp * 1000).toLocaleString()}</Text>
+                                                  }
+                                              />
+                                           <Text>{messageItem.content}</Text>
+                                          </List.Item>
+                                     )}
                                 />
-
+                                    </div>
                                 <Divider />
                                 <Row gutter={16}>
                                     <Col span={18}>
@@ -327,6 +398,7 @@ const ChatPage: React.FC = () => {
                     </Card>
                 </Col>
             </Row>
+            )}
         </div>
     );
 };
