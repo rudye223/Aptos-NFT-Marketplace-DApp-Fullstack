@@ -263,8 +263,7 @@ const NFTDetail: React.FC = () => {
                     <span style={{ color: "red" }}>{countdown}</span>
                     </Paragraph>
                   <Paragraph style={{margin: "5px 0", fontSize: "16px"}}>
-                    <Text strong>Starting Bid:</Text> {auctionData.starting_price} 
-                    APT
+                    <Text strong>Starting Bid:</Text> {auctionData.starting_price} APT
                   </Paragraph>
                   <Paragraph style={{margin: "5px 0", fontSize: "16px"}}>
                     <Text strong>Highest Bid:</Text> {auctionData.highest_bid} APT
@@ -275,7 +274,7 @@ const NFTDetail: React.FC = () => {
               <Row gutter={16} style={{ marginTop: "20px" }}>
                 <Col span={12}>
                   {auctionData ? (
-                    nftDetails.owner === "0x30f98f35fd60a816447d3a29fb2d171a3665dfbaeff74cfc98dca88ef4e242b" ? (
+                    nftDetails.owner === account?.address? (
                       <Button
                         type="primary"
                         danger
