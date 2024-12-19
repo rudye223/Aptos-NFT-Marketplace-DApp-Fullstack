@@ -32,7 +32,7 @@ const SearchNFT: React.FC = () => {
 
   const searchNFTs = async () => {
     if (!searchTerm) return;
-    setLoading(true);
+  
     try {
        const search_term = new TextEncoder().encode(searchTerm);
        const hex_string =  Array.from(search_term)
@@ -81,7 +81,7 @@ const SearchNFT: React.FC = () => {
   };
 
   const handleCardClick = (nftId: number) => {
-    navigate(`/nft/${nftId}`);
+    navigate(`/nft-detail/${nftId}`);
   };
   
   if (loading) {
