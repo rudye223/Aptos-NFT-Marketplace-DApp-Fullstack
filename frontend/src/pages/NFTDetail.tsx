@@ -139,148 +139,140 @@ if (loading) {
     <div style={{ padding: '20px', display: "flex", flexDirection:"column", alignItems: "center", justifyContent: "center" }}>
        <Title level={4} style={{ marginBottom: "20px", textAlign:"center" }}>NFT Details</Title>
       {nftDetails && (
-        <Card
-          title={<Title level={3}>{nftDetails.name}</Title>}
-          extra={<Tag
-            color={rarityColors[nftDetails.rarity]}
-            style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "10px" }}
-          >
-            {rarityLabels[nftDetails.rarity]}
-          </Tag>}
-          style={{ width: 430, marginBottom: 20 }}
-          cover={<img alt={nftDetails.name} src={nftDetails.uri} />}
-        >
-          <Row gutter={[16, 16]}>
-            <Col span={12}>
-              <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}><Text strong>NFT ID:</Text> {nftDetails.id}</Paragraph>
-              <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}><Text strong>Price:</Text> {auctionData? `Auction`:`${nftDetails.price} APT`} </Paragraph>
-            </Col>
-            <Col span={12}>
-              <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}><Text strong>Rarity:</Text> {rarityLabels[nftDetails.rarity]}</Paragraph>
-              <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}><Text strong>For Sale:</Text> {nftDetails.for_sale ? 'Yes' : 'No'}</Paragraph>
-            </Col>
- 
-          </Row>
-
-          <Paragraph style={{ marginTop: '20px', fontSize: '16px', lineHeight: 1.5 }}>
-            <Text strong >Description:</Text> {nftDetails.description}
+       <Card style={{ width: '100%', marginBottom: 20 }}>
+       <Row gutter={[16, 16]}>
+         {/* Left Column: Cover Image */}
+         <Col xs={24} sm={10} md={8}>
+           <img
+             alt={nftDetails.name}
+             src={nftDetails.uri}
+             style={{ width: '100%', borderRadius: '8px' }}
+           />
+         </Col>
+     
+         {/* Right Column: Details */}
+         <Col xs={24} sm={14} md={16}>
+           <Title level={3}>{nftDetails.name}</Title>
+           <Tag
+             color={rarityColors[nftDetails.rarity]}
+             style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}
+           >
+             {rarityLabels[nftDetails.rarity]}
+           </Tag>
+     
+           <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}>
+             <Text strong>NFT ID:</Text> {nftDetails.id}
            </Paragraph>
-          <Paragraph style={{ marginTop: '20px', fontSize: '13px', lineHeight: 1.5 }}>
-            <Text strong >Owner:</Text> { nftDetails.owner === account?.address && "You | "}{nftDetails.owner}
-          </Paragraph>
-          {auctionData && (
-            <div style={{ marginBottom: 20 }}>
-              <hr></hr>
-              <Title level={4}>Auction Information</Title>
-              <p>Auction End Time:  {new Date(auctionData.end_time * 1000).toLocaleString()}</p>
-              <p>End Countdown:<span style={{ color: "red" }}> {countdown}</span></p>
-              <p>Starting Bid: {auctionData.starting_price} APT</p>
-              <p>Highest Bid: {auctionData.highest_bid} APT</p>
-            </div>
-          )}
-          <Row gutter={16}>
-            <Col span={12}>
-              {auctionData ? (
-                // If auction data exists
-                nftDetails.owner === account?.address ? (
-                  <Button 
-                  type="primary"
-                  block
-                  disabled={auctionData.isExpired}
-                    onClick={() => {
-                      if(auctionData.isExpired)return;
-                      setIsBidModalVisible(true)
-                    }} // Function to open the bid modal
-                    icon={<DollarCircleOutlined />}
-                  >
-                    Place Bid
-                  </Button>
-                ) : (
-                  <Button type="link" disabled={auctionData.isExpired}>
-                      {auctionData?.isExpired ? "Auction Expired": "Ongoing Auction"}
-                  </Button>
-                )
-              ) : (
-                nftDetails.for_sale ? (
-                  // If for_sale is true and no auction data, show End Sale button if the user is the owner
-                  nftDetails.owner === account?.address ? (
-                    <Button
-                      type="primary"
-                      danger
-                      block
-                      onClick={handleEndSale}
-                      icon={<DollarCircleOutlined />}
-                    >
-                      End Sale
-                    </Button>
-                  ) : <Button   type="primary" onClick={() => handleBuyClick()}>
-                    Buy
-                  </Button>
-                ) : (
-                  // If for_sale is false, show List for Sale button if the user is the owner
-                  nftDetails.owner === account?.address ? (
-                    <Button
-                      type="primary"
-                      block
-                      onClick={() => setIsListModalVisible(true)}
-                      icon={<DollarCircleOutlined />}
-                    >
-                      List for Sale
-                    </Button>
-                  ) : null
-                )
-              )}
-
-            </Col>
-
-            <Col span={12}>
-              {
-                auctionData ? (
-                  // If auction data exists
-                  nftDetails.owner === account?.address ? (
-                    // If the user is the owner of the NFT, show the "End Auction" button
-                    <Button
-                      type="link"
-                      danger
-                      block
-                      onClick={() => handleEndAuction(nftDetails.id)} // Function to end the auction
-                      icon={<ClockCircleOutlined />}
-                    >
-                      End Auction
-                    </Button>
-                  ) : (
-                    // If the user is not the owner, show the "Place Bid" button
-                    <Button
-                    disabled={auctionData.isExpired}
-                      type="primary"
-                      block
-                      onClick={() => setIsBidModalVisible(true)} // Function to open the bid modal
-                      icon={<DollarCircleOutlined />}
-                    >
-                      Place Bid
-                    </Button>
-                  )
-                ) : (
-                  // If there is no auction data, only the owner can start the auction
-                  nftDetails.owner === account?.address && (
-                    <Button
-                      type="primary"
-                      block
-                      onClick={() => setIsAuctionModalVisible(true)} // Function to start the auction
-                      icon={<ClockCircleOutlined />}
-                      disabled={nftDetails.for_sale}
-                    >
-                      Start Auction
-                    </Button>
-                  )
-                )
-              }
-
-            </Col>
-
-          </Row>
-
-        </Card>
+           <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}>
+             <Text strong>Price:</Text> {auctionData ? `Auction` : `${nftDetails.price} APT`}
+           </Paragraph>
+           <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}>
+             <Text strong>Rarity:</Text> {rarityLabels[nftDetails.rarity]}
+           </Paragraph>
+           <Paragraph style={{ margin: '5px 0', fontSize: '16px' }}>
+             <Text strong>For Sale:</Text> {nftDetails.for_sale ? 'Yes' : 'No'}
+           </Paragraph>
+           <Paragraph style={{ marginTop: '20px', fontSize: '16px', lineHeight: 1.5 }}>
+             <Text strong>Description:</Text> {nftDetails.description}
+           </Paragraph>
+           <Paragraph style={{ marginTop: '20px', fontSize: '13px', lineHeight: 1.5 }}>
+             <Text strong>Owner:</Text> {nftDetails.owner === account?.address && "You | "}{nftDetails.owner}
+           </Paragraph>
+     
+           {auctionData && (
+             <>
+               <hr />
+               <Title level={4}>Auction Information</Title>
+               <Paragraph>
+                 <Text strong>Auction End Time:</Text> {new Date(auctionData.end_time * 1000).toLocaleString()}
+               </Paragraph>
+               <Paragraph>
+                 <Text strong>End Countdown:</Text> <span style={{ color: "red" }}>{countdown}</span>
+               </Paragraph>
+               <Paragraph>
+                 <Text strong>Starting Bid:</Text> {auctionData.starting_price} APT
+               </Paragraph>
+               <Paragraph>
+                 <Text strong>Highest Bid:</Text> {auctionData.highest_bid} APT
+               </Paragraph>
+             </>
+           )}
+     
+           <Row gutter={16} style={{ marginTop: '20px' }}>
+             <Col span={12}>
+               {auctionData ? (
+                 nftDetails.owner === account?.address ? (
+                   <Button
+                     type="primary"
+                     danger
+                     block
+                     onClick={() => handleEndAuction(nftDetails.id)}
+                     icon={<ClockCircleOutlined />}
+                   >
+                     End Auction
+                   </Button>
+                 ) : (
+                   <Button
+                     disabled={auctionData.isExpired}
+                     type="primary"
+                     block
+                     onClick={() => setIsBidModalVisible(true)}
+                     icon={<DollarCircleOutlined />}
+                   >
+                     Place Bid
+                   </Button>
+                 )
+               ) : (
+                 nftDetails.for_sale ? (
+                   nftDetails.owner === account?.address ? (
+                     <Button
+                       type="primary"
+                       danger
+                       block
+                       onClick={handleEndSale}
+                       icon={<DollarCircleOutlined />}
+                     >
+                       End Sale
+                     </Button>
+                   ) : (
+                     <Button type="primary" onClick={() => handleBuyClick()}>
+                       Buy
+                     </Button>
+                   )
+                 ) : (
+                   nftDetails.owner === account?.address && (
+                     <Button
+                       type="primary"
+                       block
+                       onClick={() => setIsListModalVisible(true)}
+                       icon={<DollarCircleOutlined />}
+                     >
+                       List for Sale
+                     </Button>
+                   )
+                 )
+               )}
+             </Col>
+             <Col span={12}>
+               {!auctionData ? (
+                 nftDetails.owner === account?.address && (
+                   <Button
+                     type="primary"
+                     block
+                     onClick={() => setIsAuctionModalVisible(true)}
+                     icon={<ClockCircleOutlined />}
+                     disabled={nftDetails.for_sale}
+                   >
+                     Start Auction
+                   </Button>
+                 )
+               ) : null}
+             </Col>
+           </Row>
+         </Col>
+       </Row>
+     </Card>
+     
       )}
 
 

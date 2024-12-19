@@ -14,6 +14,7 @@ import AuctionPage from "./pages/AuctionPage";
 import Transfer from "./pages/Transfer";
 import NFTDetail from "./pages/NFTDetail";
 import Analytics from "./pages/Analytics";
+import ChatPage from "./pages/ChatPage";
 const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
  
 function App() {
@@ -60,6 +61,7 @@ function App() {
           <Route path="/auctions" element={<AuctionPage />} />
           <Route path="/transfer" element={<Transfer />} />
           <Route path="/nft-detail/:tokenId" element={<NFTDetail />} />
+          <Route path="/chats" element={<ChatPage />} />
         </Routes>
 
         <Modal
