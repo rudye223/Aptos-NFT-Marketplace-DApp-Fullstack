@@ -114,7 +114,7 @@ const NavBar: React.FC<NavBarProps> = ({ onMintNFTClick }) => {
                 src="/Aptos_Primary_WHT.png"
                 alt="Aptos Logo"
                 style={{ height: "40px", marginRight: 20,
-                   backgroundColor:"skyblue" ,
+                   backgroundColor:" #29a3d5" ,
                   //  backgroundColor:"#1677ff"  
                   }}
             />

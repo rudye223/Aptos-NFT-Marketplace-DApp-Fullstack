@@ -10,7 +10,9 @@ import PlaceBidModal from "../components/PlaceBidModal";
 import { rarityLabels } from "../utils/rarityUtils";
 import { Auction } from "../types/nftType";
 
-
+const truncateAddress = (address: string, start = 6, end = 4) => {
+  return `${address.slice(0, start)}...${address.slice(-end)}`;
+};
 
 const AuctionsPage = () => {
   const { account } = useWallet();
@@ -226,6 +228,8 @@ const AuctionsPage = () => {
                 <h4>{auction.nftMetadata.name}</h4>
                 <p>{auction.nftMetadata.description}</p>
                 <p>Rarity: {rarityLabels[auction.nftMetadata.rarity]}</p>
+                <p>Owner: { auction.nftMetadata.owner === account?.address && "You | "}{truncateAddress(auction.nftMetadata.owner)}</p>
+
               </div>
             </Card>
           </Col>
