@@ -96,7 +96,7 @@ module NFTMarketplace {
         assert!(!exists<SharedChats>(owner), E_CHAT_DOES_NOT_EXIST);
         move_to(account, SharedChats { chats: vector::empty() });
     }
-    
+
     #[view]
     public fun is_user_initialized(user_address: address): bool {
         exists<SharedChats>(user_address)
@@ -694,6 +694,58 @@ public fun get_user_chats_view(
 
     return user_chats
 }
+
+  // Helper function to check if one vector contains another
+    fun vector_contains(haystack: &vector<u8>, needle: &vector<u8>): bool {
+        let haystack_len = vector::length(haystack);
+        let needle_len = vector::length(needle);
+
+        if (needle_len == 0) {
+            return true
+        }; // Empty needle matches any string
+        if (needle_len > haystack_len) {
+            return false
+        }; // Needle longer than haystack, impossible
+
+        let  i = 0;
+        while (i <= haystack_len - needle_len) {
+            let  j = 0;
+            while (j < needle_len) {
+                if (*vector::borrow(haystack, i + j) != *vector::borrow(needle, j)) {
+                    break
+                };
+                j = j + 1;
+            };
+            if (j == needle_len) {
+                return true
+            }; // Full needle found
+            i = i + 1;
+        };
+
+        false // Needle not found
+    }
+
+   // Get NFTs by Name
+    #[view]
+    public fun search_nfts_by_name(
+        marketplace_addr: address,
+        search_term: vector<u8>
+    ): vector<u64> acquires Marketplace {
+        let marketplace = borrow_global<Marketplace>(marketplace_addr);
+        let nft_ids = vector::empty<u64>();
+
+        let nfts_len = vector::length(&marketplace.nfts);
+        let mut_i = 0;
+        while (mut_i < nfts_len) {
+            let nft = vector::borrow(&marketplace.nfts, mut_i);
+             if (vector_contains(&nft.name, &search_term)) {
+                vector::push_back(&mut nft_ids, nft.id);
+            };
+            mut_i = mut_i + 1;
+        };
+
+        nft_ids
+    }
 
 }
 }
