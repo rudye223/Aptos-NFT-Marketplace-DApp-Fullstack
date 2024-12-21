@@ -20,6 +20,7 @@ module NFTMarketplace {
     const E_INVALID_PRICE: u64 = 400;
     const E_NFT_NOT_FOR_SALE: u64 = 401;
     const E_INSUFFICIENT_PAYMENT: u64 = 402;
+    const E_NFT_FOR_SALE: u64 = 403;
     const E_INSUFFICIENT_FUNDS: u64 = 501;
     const E_INVALID_AMOUNT: u64 = 502;
     const E_UNAUTHORIZED_CHAT_ACCESS: u64 = 600;
@@ -568,7 +569,7 @@ module NFTMarketplace {
 
         assert!(nft_ref.owner == signer::address_of(account), E_CALLER_NOT_OWNER);
         assert!(nft_ref.owner != new_owner, E_TRANSFER_TO_SAME_OWNER);
-        assert!(!nft_ref.for_sale, E_NFT_NOT_FOR_SALE); // Ensure NFT is not for sale
+        assert!(!nft_ref.for_sale, E_NFT_FOR_SALE); // Ensure NFT is not for sale
 
         nft_ref.owner = new_owner;
         nft_ref.for_sale = false;
