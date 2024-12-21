@@ -338,7 +338,15 @@ const NFTDetail: React.FC = () => {
                       </Button>
                     )
                   ) :   
-                    null
+                  <Button
+                  disabled={auctionData.isExpired}
+                  type="primary"
+                  block
+                  onClick={() => setIsBidModalVisible(true)}
+                  icon={<DollarCircleOutlined />}
+                >
+                  Self Bid
+                </Button>
                   }
                 </Col>
               </Row>
