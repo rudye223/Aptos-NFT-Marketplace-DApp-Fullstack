@@ -51,7 +51,7 @@ const ListForSaleModal: React.FC<ListForSaleModalProps> = ({ isVisible, onClose,
   return (
     <Modal
       title="List NFT for Sale"
-      visible={isVisible}
+      open={isVisible}
       onCancel={onClose}
       footer={null}
     >

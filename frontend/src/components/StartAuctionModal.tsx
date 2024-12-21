@@ -80,7 +80,7 @@ const StartAuctionModal: React.FC<StartAuctionModalProps> = ({
   return (
     <Modal
       title="Start Auction"
-      visible={isVisible}
+      open={isVisible}
       onCancel={onClose}
       footer={null}
     >

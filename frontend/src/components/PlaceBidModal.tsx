@@ -55,7 +55,7 @@ const PlaceBidModal: React.FC<PlaceBidModalProps> = ({ isVisible, onClose, nftDe
   return (
     <Modal
       title="Place a Bid"
-      visible={isVisible}
+      open={isVisible}
       onCancel={onClose}
       footer={null}
     >

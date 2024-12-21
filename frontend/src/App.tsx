@@ -68,7 +68,7 @@ function App() {
 
         <Modal
           title="Mint New NFT"
-          visible={isModalVisible}
+          open={isModalVisible}
           onCancel={() => setIsModalVisible(false)}
           footer={null}
         >

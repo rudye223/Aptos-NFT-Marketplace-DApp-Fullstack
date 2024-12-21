@@ -47,7 +47,7 @@ const ConfirmPurchaseModal: React.FC<ConfirmPurchaseModalProps> = ({ isVisible, 
   return (
     <Modal
       title="Confirm Purchase"
-      visible={isVisible}
+     open={isVisible}
       onCancel={onClose}
       footer={null}
     >
