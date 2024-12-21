@@ -24,6 +24,7 @@ module NFTMarketplace {
     const E_INVALID_AMOUNT: u64 = 502;
     const E_UNAUTHORIZED_CHAT_ACCESS: u64 = 600;
     const E_CHAT_DOES_NOT_EXIST: u64 = 601;
+    const E_CHAT_ALREADY_EXISTS_BETWEEN_USERS: u64 = 602;
     
     const MARKETPLACE_FEE_PERCENT: u64 = 2; // 2% fee
 
@@ -633,7 +634,23 @@ module NFTMarketplace {
     }
 
 
+  //Check if a chat already exist between sender and recipient and returns bool
+  fun get_chat_id_bool(user_address: address, recipient_address: address): bool acquires SharedChats {
+        assert!(exists<SharedChats>(user_address), E_CHAT_DOES_NOT_EXIST);
 
+        let shared_chats = borrow_global<SharedChats>(user_address);
+        let chats = &shared_chats.chats;
+
+        let i = 0;
+          while (i < vector::length(chats)) {
+            let chat = vector::borrow(chats, i);
+             if (is_participant(chat, user_address) && is_participant(chat, recipient_address)) {
+               return true
+            };
+           i = i + 1;
+        };
+        return false
+    }
       // Create a new chat between two users
 public entry fun create_chat(
     account: &signer,
@@ -647,6 +664,9 @@ public entry fun create_chat(
         initialize_shared_chats(account);
     };
 
+    // Check if a chat between sender and recipient already exists
+    let chat_exists  = get_chat_id_bool(sender, recipient);
+    assert!(!chat_exists, E_CHAT_ALREADY_EXISTS_BETWEEN_USERS);
 
     let participants = vector::empty<address>();
     vector::push_back(&mut participants, sender);
@@ -803,26 +823,26 @@ fun get_other_participant(chat: &Chat, current_user: address): address {
     return current_user
 }
 
+    //Check if a chat already exist betwen sender and recipient and return chat id if found
     #[view]
     public fun get_chat_id(user_address: address, recipient_address: address): option::Option<u64> acquires SharedChats {
         assert!(exists<SharedChats>(user_address), E_CHAT_DOES_NOT_EXIST);
 
          let shared_chats = borrow_global<SharedChats>(user_address);
         let chats = &shared_chats.chats;
-
-
-        
+    
         let i = 0;
           while (i < vector::length(chats)) {
             let chat = vector::borrow(chats, i);
              if (is_participant(chat, user_address) && is_participant(chat, recipient_address)) {
                return option::some(chat.id)
-                
             };
            i = i + 1;
         };
         return option::none()
     }
+
+ 
 
 }
 }
