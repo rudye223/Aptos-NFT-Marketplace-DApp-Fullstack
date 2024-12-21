@@ -190,7 +190,7 @@ const ChatPage: React.FC = () => {
                 function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::get_chat_messages`,
                 type_arguments: [],
                 arguments: [account.address, chatId],
-            });
+            }) as any;
             if (response && response.length > 0 && response[0].length > 0) {
                 const decryptedMessages = await Promise.all(response[0].map(async (msg: any) => ({
                     ...msg,
@@ -218,7 +218,7 @@ const ChatPage: React.FC = () => {
                 function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::get_user_chats_view`,
                 type_arguments: [],
                 arguments: [account.address],
-            });
+            }) as any;
             if (response && response.length > 0 && response[0].length > 0) {
                 const parsedChats = response[0].map((chat: any) => ({
                     ...chat,
@@ -302,7 +302,7 @@ const ChatPage: React.FC = () => {
                 function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::get_chat_id`,
                 type_arguments: [],
                 arguments: [userAddress, recipientAddress],
-            });
+            }) as any;
             console.log("response:", response) 
             // Handle different cases based on the response
             if (response && response.length > 0 && response[0]?.vec && response[0].vec.length > 0) {

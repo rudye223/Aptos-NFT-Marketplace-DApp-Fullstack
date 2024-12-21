@@ -57,13 +57,7 @@ const NFTDetail: React.FC = () => {
         padding: '24px !important',
     };
 
-    const imageStyle = {
-        width: '100%',
-        height: 'auto',
-        display: 'block',
-        objectFit: 'cover',
-        borderRadius: '12px 0 0 12px',
-    };
+   
 
     const tagStyle = {
         fontSize: '16px',
@@ -234,7 +228,13 @@ const NFTDetail: React.FC = () => {
                 <Card style={cardStyle}>
                     <Row gutter={[16, 16]}>
                       <Col xs={24} sm={10} md={8}>
-                            <img alt={nftDetails.name} src={nftDetails.uri} style={imageStyle} />
+                            <img alt={nftDetails.name} src={nftDetails.uri} style={{
+                                width: '100%',
+                                height: 'auto',
+                                display: 'block',
+                                objectFit: 'cover',
+                                borderRadius: '12px 0 0 12px',
+                            }} />
                         </Col>
 
                         <Col xs={24} sm={14} md={16} style={{ paddingLeft: '20px' }}>

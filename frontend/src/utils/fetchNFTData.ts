@@ -11,7 +11,7 @@ export const fetchNFTDataUtil = async (tokenId: string, account: string | undefi
       function: `${MARKET_PLACE_ADDRESS}::NFTMarketplace::get_nft_details`,
       arguments: [MARKET_PLACE_ADDRESS, tokenId],
       type_arguments: [],
-    });
+    }) as any;
 
     const auc = nftDetails[8];
     const auc_2 = auc['vec'];

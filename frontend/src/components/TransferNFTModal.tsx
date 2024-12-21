@@ -25,9 +25,7 @@ const TransferNFTModal: React.FC<TransferNFTModalProps> = ({
     const modalStyle = {
          borderRadius: '12px'
    };
-     const formStyle = {
-         layout:'vertical'
-     }
+      
        const buttonStyle = {
           height: '40px',
          fontSize: '14px',
@@ -83,7 +81,7 @@ const TransferNFTModal: React.FC<TransferNFTModalProps> = ({
               </Button>,
             ]}
         >
-            <Form layout="vertical" style={formStyle}>
+            <Form layout="vertical"  >
                <Form.Item label="New Owner Address">
                      <Input
                          placeholder="Enter new owner address"
