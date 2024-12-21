@@ -3,7 +3,7 @@ name = "NFTMarketplace"
 version = "0.1.0"
 
 [addresses]
-NFTMarketplace = "0x030f98f35fd60a816447d3a29fb2d171a3665dfbaeff74cfc98dca88ef4e242b"
+NFTMarketplace = "0x76043719077e039bdd83e3419d62924b0168ac9617bdfa601ead5f187998f917"
 aptos_framework = "0x1"
 primitives = "0xCAFE"
 
