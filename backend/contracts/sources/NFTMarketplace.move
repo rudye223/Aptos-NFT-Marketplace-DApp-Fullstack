@@ -803,6 +803,26 @@ fun get_other_participant(chat: &Chat, current_user: address): address {
     return current_user
 }
 
+    #[view]
+    public fun get_chat_id(user_address: address, recipient_address: address): option::Option<u64> acquires SharedChats {
+        assert!(exists<SharedChats>(user_address), E_CHAT_DOES_NOT_EXIST);
+
+         let shared_chats = borrow_global<SharedChats>(user_address);
+        let chats = &shared_chats.chats;
+
+
+        
+        let i = 0;
+          while (i < vector::length(chats)) {
+            let chat = vector::borrow(chats, i);
+             if (is_participant(chat, user_address) && is_participant(chat, recipient_address)) {
+               return option::some(chat.id)
+                
+            };
+           i = i + 1;
+        };
+        return option::none()
+    }
 
 }
 }
