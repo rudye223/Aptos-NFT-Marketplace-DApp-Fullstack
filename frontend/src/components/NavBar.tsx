@@ -93,7 +93,7 @@ const NavBar: React.FC<NavBarProps> = ({ onMintNFTClick }) => {
         { key: "/auctions", label: <Link to="/auctions" style={{ color: '#000', fontWeight: 500 }}>Auctions</Link> },
         { key: "/transfer", label: <Link to="/transfer" style={{ color: '#000', fontWeight: 500 }}>Transfer</Link> },
         { key: "/search", label: <Link to="/search" style={{ color: '#000', fontWeight: 500 }}>Search</Link> },
-        { key: "/chats", label: <Link to="/chats" style={{ color: '#000', fontWeight: 500 }}>Chats</Link> },
+        { key: "/chat", label: <Link to="/chat" style={{ color: '#000', fontWeight: 500 }}>Chat</Link> },
         { key: "/mint-nft", label: <span onClick={onMintNFTClick} style={{ color: '#000', fontWeight: 500 }}>Mint NFT</span> },
     ];
 

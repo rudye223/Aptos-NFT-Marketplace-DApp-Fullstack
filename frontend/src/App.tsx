@@ -62,7 +62,7 @@ function App() {
           <Route path="/auctions" element={<AuctionPage />} />
           <Route path="/transfer" element={<Transfer />} />
           <Route path="/nft-detail/:tokenId" element={<NFTDetail />} />
-          <Route path="/chats" element={<ChatPage />} />
+          <Route path="/chat" element={<ChatPage />} />
           <Route path="/search" element={<SearchNFT />} />
         </Routes>
 
