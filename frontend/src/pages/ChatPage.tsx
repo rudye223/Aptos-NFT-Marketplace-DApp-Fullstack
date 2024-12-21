@@ -149,7 +149,7 @@ const ChatPage: React.FC = () => {
             };
 
             const response = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
-            message.success(`Transaction ${response.hash} submitted`);
+       
             await client.waitForTransaction(response.hash);
             message.success("User initialized successfully!");
             setTransactionStatus("success")
@@ -250,7 +250,7 @@ const ChatPage: React.FC = () => {
                 arguments: [recipientAddress],
             };
             const response = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
-            message.success(`Transaction ${response.hash} submitted`);
+ 
             await client.waitForTransaction(response.hash);
             message.success("Chat Created Successfully");
             setTransactionStatus("success");
@@ -280,7 +280,7 @@ const ChatPage: React.FC = () => {
                 arguments: [selectedChat.id, encryptedMessage],
             };
             const response = await (window as any).aptos.signAndSubmitTransaction(entryFunctionPayload);
-            message.success(`Transaction ${response.hash} submitted`);
+         
             await client.waitForTransaction(response.hash);
             message.success("Message sent successfully!");
             setTransactionStatus("success");
