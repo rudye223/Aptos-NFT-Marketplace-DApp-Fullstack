@@ -84,6 +84,7 @@ const ChatPage: React.FC = () => {
             fetchMessages(selectedChat.id);
             startPolling()
         } else {
+            setMessages([])
             stopPolling()
         }
         return () => {
@@ -200,6 +201,9 @@ const ChatPage: React.FC = () => {
                 setMessages(decryptedMessages as Message1[]);
                 scrollToBottom();
             }
+            else {
+                setMessages([]); // clear messages if empty
+             }
         } catch (error) {
             console.error("Error fetching messages:", error);
             message.error("Failed to fetch messages.");
