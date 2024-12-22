@@ -37,7 +37,7 @@ const Analytics = () => {
           function: `${MARKET_PLACE_ADDRESS}::${MARKET_PLACE_NAME}::get_analytics`,
           arguments: [MARKET_PLACE_ADDRESS],
           type_arguments: [],
-        });
+        }) as any;
         console.log("data::", data);
     
         const transformedAnalytics = {

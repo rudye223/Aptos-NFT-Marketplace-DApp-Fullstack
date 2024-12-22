@@ -189,7 +189,7 @@ const NavBar: React.FC<NavBarProps> = ({ onMintNFTClick }) => {
         <Space style={{ alignItems: "center" }}>
             {connected && account ? (
                 <Dropdown
-                    overlay:menu={
+                    overlay={
                         <Menu>
                           <Menu.Item key="address">
                             <Text style={{ fontWeight: "bold" }}>Address:</Text>
